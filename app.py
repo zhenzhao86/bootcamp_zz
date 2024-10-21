@@ -1,61 +1,28 @@
+from utils import password_protect
 import streamlit as st
 
-# Function to display the About Us page
-def about_us():
-    st.title("About Us")
-    st.write("""
-    ## Project Scope
-    This project aims to provide citizens with seamless access to information regarding buying HDB flats in the resale market.
+# Password protect the app
+if not password_protect():
+    st.stop()
 
-    ## Objectives
-    - Consolidate information from multiple trustworthy sources.
-    - Facilitate understanding through interactive engagements.
-    - Customize information presentation based on user inputs.
+import streamlit as st
+from affordability_calculator import affordability_calculator
+from general_query import general_query
+from about_us import about_us
+from methodology import methodology
 
-    ## Data Sources
-    - HDB Official Website
-    - Government Resources
-    - Real Estate Data APIs
+st.sidebar.title("Navigation")
+option = st.sidebar.selectbox("Choose a page", ["Main", "Affordability Calculator", "General Query on HDB", "About Us", "Methodology"])
 
-    ## Features
-    - Step-by-step guidance on the buying process.
-    - FAQ section for common queries.
-    - Data visualizations for market trends.
-    """)
-
-# Function to display the Methodology page
-def methodology():
-    st.title("Methodology")
-    st.write("""
-    ## Data Flows and Implementation Details
-    This section outlines the data flow and implementation details for our application.
-    
-    - **Data Collection**: Data is collected from official sources and APIs.
-    - **Data Processing**: Data is processed to present it in a user-friendly format.
-    - **User Interaction**: Users interact with the application to retrieve tailored information.
-
-    ## Flowchart
-    Below is a flowchart illustrating the process flow for each use case in the application.
-    """)
-
-    # You can use Streamlit's `st.image` to display a flowchart image
-    st.image("flowchart.png")  # Ensure you have a flowchart image in your project directory
-
-# Main function to set up the app
-def main():
-    st.sidebar.title("Navigation")
-    selection = st.sidebar.radio("Go to", ["Home", "About Us", "Methodology"])
-
-    if selection == "Home":
-        st.title("Buying an HDB Flat in the Resale Market")
-        st.write("Welcome! This app will help you navigate the buying process.")
-        # Existing content for the home page
-
-    elif selection == "About Us":
-        about_us()
-
-    elif selection == "Methodology":
-        methodology()
-
-if __name__ == "__main__":
-    main()
+if option == "Affordability Calculator":
+    affordability_calculator()
+elif option == "General Query on HDB":
+    general_query()
+elif option == "About Us":
+    about_us()
+elif option == "Methodology":
+    methodology()
+else:
+    # Main Page Content
+    with st.expander("IMPORTANT NOTICE: This web application is a prototype developed for educational purposes only. The information provided here is NOT intended for real-world usage and should not be relied upon for making any decisions, especially those related to financial, legal, or healthcare matters."):
+        st.write("Furthermore, please be aware that the LLM may generate inaccurate or incorrect information. You assume full responsibility for how you use any generated output. Always consult with qualified professionals for accurate and personalized advice.")
