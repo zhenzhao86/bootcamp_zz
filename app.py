@@ -1,9 +1,9 @@
 import streamlit as st
 from affordability_calculator import affordability_calculator
-from general_query import general_query
 from about_us import about_us
 from methodology import methodology
 from utils import password_protect
+
 
 # Password protect the app
 if not password_protect():
