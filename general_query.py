@@ -38,21 +38,16 @@ def general_query():
     
     if st.button("Submit"):
         if user_query:
-            # Attempt to find relevant information from the data
-            results = handle_query(data, user_query)
-
-            if not results.empty:
-                st.write("Search Results:")
-                st.dataframe(results)
-            else:
-                # If no results found, fallback to the OpenAI API for a general response
-                response = openai.Completion.create(
-                    engine="text-davinci-003",  # You can use GPT-3.5 or GPT-4 depending on your preference
-                    prompt=f"Based on the HDB resale market data, {user_query}",
-                    max_tokens=150
-                )
-                st.write("OpenAI Response:")
-                st.write(response.choices[0].text.strip())
+            # Use the newer Chat API instead of Completion.create
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",  # or "gpt-4" if you have access
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant knowledgeable about the HDB resale process."},
+                    {"role": "user", "content": user_query}
+                ],
+                max_tokens=150
+            )
+            st.write(response['choices'][0]['message']['content'])
         else:
             st.write("Please enter a query.")
 
