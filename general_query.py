@@ -4,7 +4,7 @@ import os
 import streamlit as st
 
 # You can replace this with the actual API key after signing up
-openai.api_key = 'ysk-proj-lNJAXFgELuQFEW-lrG-GZkIqXzPPEnsDnJuS1fsCNS77z6qm9zDCX1rjopT3BlbkFJSE0kZOAonjxwhRezJoPIj840z5aQB3z-i2I563K-fGTdAXWwtuaReyXFMA'
+openai.api_key = st.secrets.api_key
 
 # Function to load and combine CSV files
 def load_data():
