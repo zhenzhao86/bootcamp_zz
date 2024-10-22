@@ -36,18 +36,26 @@ def general_query():
     
     user_query = st.text_input("Enter your query about the HDB resale process:")
     
+import openai
+import streamlit as st
+
+# Use your OpenAI API key here
+openai.api_key = 'your-openai-api-key'
+
+def general_query():
+    st.title("General Query on HDB Resale Market")
+
+    user_query = st.text_input("Enter your query about the HDB resale process:")
+
     if st.button("Submit"):
         if user_query:
-            # Use the newer Chat API instead of Completion.create
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",  # or "gpt-4" if you have access
-                messages=[
-                    {"role": "system", "content": "You are a helpful assistant knowledgeable about the HDB resale process."},
-                    {"role": "user", "content": user_query}
-                ],
+            # Use the new completions.create() method
+            response = openai.completions.create(
+                model="gpt-4",  # or "gpt-3.5-turbo" depending on availability
+                prompt=user_query,
                 max_tokens=150
             )
-            st.write(response['choices'][0]['message']['content'])
+            st.write(response['choices'][0]['text'])
         else:
             st.write("Please enter a query.")
 
