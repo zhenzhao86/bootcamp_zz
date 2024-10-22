@@ -3,7 +3,7 @@ import bcrypt
 
 # Hardcoded password (for example purposes, you may implement more secure ways)
 def authenticate(password):
-    hashed_password = bcrypt.hashpw(b"password123", bcrypt.gensalt())  # Replace with a hashed password
+    hashed_password = bcrypt.hashpw(b"aibootcampzz", bcrypt.gensalt())  # Replace with a hashed password
     return bcrypt.checkpw(password.encode(), hashed_password)
 
 def password_protect():

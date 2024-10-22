@@ -11,6 +11,7 @@ def about_us():
     - To allow users to ask general questions about HDB and receive AI-powered responses.
     
     ## Data Sources
+    - Resale Flat Prices (https://data.gov.sg/collections/189/view)         
     - [HDB Official Website](https://www.hdb.gov.sg/)
     - [Singapore Government APIs](https://www.developer.gov.sg/)
     
