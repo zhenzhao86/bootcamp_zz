@@ -39,8 +39,6 @@ def general_query():
 import openai
 import streamlit as st
 
-# Use your OpenAI API key here
-openai.api_key = 'your-openai-api-key'
 
 def general_query():
     st.title("General Query on HDB Resale Market")
@@ -49,8 +47,9 @@ def general_query():
 
     if st.button("Submit"):
         if user_query:
+        
             # Use the new completions.create() method
-            response = openai.completions.create(
+            response = openai.chat.completions.create(
                 model="gpt-4",  # or "gpt-3.5-turbo" depending on availability
                 prompt=user_query,
                 max_tokens=150
