@@ -1,6 +1,7 @@
 import streamlit as st
 from affordability_calculator import affordability_calculator
 from about_us import about_us
+from general_query import general_query
 from methodology import methodology
 from utils import password_protect
 
@@ -11,7 +12,7 @@ if not password_protect():
 
 # Sidebar Navigation
 st.sidebar.title("Navigation")
-option = st.sidebar.selectbox(
+option = st.sidebar.radio(
     "Choose a page", 
     ["Main", "Affordability Calculator", "General Query on HDB", "About Us", "Methodology"]
 )
