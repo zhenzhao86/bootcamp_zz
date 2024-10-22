@@ -3,3 +3,4 @@ openai
 pandas
 bcrypt
 st
+openai>=1.0.0
