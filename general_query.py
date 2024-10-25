@@ -6,18 +6,30 @@ import streamlit as st
 # You can replace this with the actual API key after signing up
 openai.api_key = st.secrets.api_key
 
-# Load and preprocess the HDB resale dataset
+# Function to load and concatenate all CSV files in the data folder
 def load_data():
-    # Load the CSV file
-    df = pd.read_csv('/mnt/data/Resale flat prices based on registration date from Jan-2017 onwards.csv')
+    # Use glob to find all CSV files in the "data" folder
+    all_files = glob.glob(os.path.join("data", "*.csv"))
+    
+    # List to hold each CSV file as a DataFrame
+    df_list = []
+    
+    # Read each file and append it to the list
+    for file in all_files:
+        df = pd.read_csv(file)
+        df_list.append(df)
+    
+    # Concatenate all DataFrames in the list into a single DataFrame
+    combined_df = pd.concat(df_list, ignore_index=True)
     
     # Preprocess data
-    df['month'] = pd.to_datetime(df['month'], format='%Y-%m')  # Convert month to datetime
-    df['lease_commence_date'] = pd.to_datetime(df['lease_commence_date'], format='%Y')  # Convert lease start to datetime
-    df['storey_range'] = df['storey_range'].astype(str)  # Ensure storey range is string
-    df['flat_type'] = df['flat_type'].astype(str)  # Ensure flat type is string
+    combined_df['month'] = pd.to_datetime(combined_df['month'], format='%Y-%m')  # Convert month to datetime
+    combined_df['lease_commence_date'] = pd.to_datetime(combined_df['lease_commence_date'], format='%Y')  # Convert lease start to datetime
+    combined_df['storey_range'] = combined_df['storey_range'].astype(str)  # Ensure storey range is string
+    combined_df['flat_type'] = combined_df['flat_type'].astype(str)  # Ensure flat type is string
     
-    return df
+    return combined_df
+
 
 # Analysis functions
 def calculate_average_price(df):
