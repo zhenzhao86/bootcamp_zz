@@ -54,16 +54,17 @@ def general_query():
                 st.write("Here are the top matches from the HDB resale dataset:")
                 st.write(result_df)
                 
-                # Optionally pass this data to the LLM for enhanced query response
-                combined_prompt = f"Based on this data: {result_df.to_dict()} and the user's query: {user_query}, provide a helpful response."
-                
-                # Use OpenAI API to generate a more detailed response
+                # Create the prompt combining user query and search result
+                combined_prompt = f"The user asked about {user_query}. Based on the HDB resale dataset: {result_df.to_dict()}, provide an accurate answer about Singapore HDB resale prices."
+
+                # Use OpenAI API to generate a detailed response as an HDB resale assistant
                 response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
+                    model="gpt-4",  # or "gpt-3.5-turbo"
                     messages=[
+                        {"role": "system", "content": "You are an HDB resale assistant specializing in the Singapore housing market. Use the data provided to give accurate information on HDB resale prices and other related queries."},
                         {"role": "user", "content": combined_prompt}
                     ],
-                    max_tokens=150
+                    max_tokens=200
                 )
                 st.write(response['choices'][0]['message']['content'])
             else:
