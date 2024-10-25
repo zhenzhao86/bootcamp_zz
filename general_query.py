@@ -6,55 +6,67 @@ import streamlit as st
 # You can replace this with the actual API key after signing up
 openai.api_key = st.secrets.api_key
 
-# Function to load and combine CSV files
+# Load and preprocess the HDB resale dataset
 def load_data():
-    data_folder = "data"  # Folder where your CSV files are stored
-    all_data = []
+    # Load the CSV file
+    df = pd.read_csv('data/Resale flat prices based on registration date from Jan-2017 onwards.csv')
+    
+    # Preprocessing steps
+    df['month'] = pd.to_datetime(df['month'], format='%Y-%m')  # Convert month to datetime
+    df['lease_commence_date'] = pd.to_datetime(df['lease_commence_date'], format='%Y')  # Convert lease start to datetime
+    df['storey_range'] = df['storey_range'].astype(str)  # Ensure storey range is string
+    df['flat_type'] = df['flat_type'].astype(str)  # Ensure flat type is string
+    
+    # Fill missing values (if any)
+    df.fillna({
+        'resale_price': 0,
+        'remaining_lease': 'Unknown'
+    }, inplace=True)
 
-    # Loop through all CSV files in the folder
-    for filename in os.listdir(data_folder):
-        if filename.endswith('.csv'):
-            file_path = os.path.join(data_folder, filename)
-            df = pd.read_csv(file_path)
-            all_data.append(df)
+    return df
 
-    # Combine all DataFrames into a single DataFrame
-    combined_data = pd.concat(all_data, ignore_index=True)
-    return combined_data
-
-# Function to handle user queries using the loaded data
-def handle_query(data, user_query):
-    # This is a simple example of filtering the DataFrame based on a user query
-    result = data[data.apply(lambda row: row.astype(str).str.contains(user_query, case=False).any(), axis=1)]
-    return result
+# Query the dataset based on user input
+def search_data(user_query, df):
+    # Simplified search logic (exact match or contains logic)
+    filtered_df = df[df.apply(lambda row: row.astype(str).str.contains(user_query, case=False).any(), axis=1)]
+    
+    # If matching records are found
+    if not filtered_df.empty:
+        return filtered_df.head(5)  # Limit to the top 5 results
+    else:
+        return None
 
 def general_query():
     st.title("General Query on HDB Resale Market")
     
-    # Load data from CSV files
-    data = load_data()
+    # Load the dataset
+    df = load_data()
     
     user_query = st.text_input("Enter your query about the HDB resale process:")
     
-import openai
-import streamlit as st
-
-
-def general_query():
-    st.title("General Query on HDB Resale Market")
-
-    user_query = st.text_input("Enter your query about the HDB resale process:")
-
     if st.button("Submit"):
         if user_query:
-        
-            # Use the new completions.create() method
-            response = openai.chat.completions.create(
-                model="gpt-4",  # or "gpt-3.5-turbo" depending on availability
-                prompt=user_query,
-                max_tokens=150
-            )
-            st.write(response['choices'][0]['text'])
+            # Search in the dataset
+            result_df = search_data(user_query, df)
+            
+            if result_df is not None:
+                # Display the search result to the user
+                st.write("Here are the top matches from the HDB resale dataset:")
+                st.write(result_df)
+                
+                # Optionally pass this data to the LLM for enhanced query response
+                combined_prompt = f"Based on this data: {result_df.to_dict()} and the user's query: {user_query}, provide a helpful response."
+                
+                # Use OpenAI API to generate a more detailed response
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "user", "content": combined_prompt}
+                    ],
+                    max_tokens=150
+                )
+                st.write(response['choices'][0]['message']['content'])
+            else:
+                st.write("No matching records found in the HDB dataset.")
         else:
             st.write("Please enter a query.")
-
