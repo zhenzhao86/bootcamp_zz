@@ -1,85 +1,96 @@
 import openai
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import glob
 import os
+import matplotlib.pyplot as plt
 
-# Initialize OpenAI API key
-# openai.api_key = os.getenv("OPENAI_API_KEY")
-openai.api_key = st.secrets.api_key
+# Load OpenAI API key
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Step 1: Load and concatenate CSV files from the data folder
-def load_and_preprocess_data():
-    # Load all CSV files in the data folder
-    all_files = glob.glob(os.path.join("data", "*.csv"))
-    df_list = [pd.read_csv(file) for file in all_files]
-    
-    # Concatenate all CSV files into a single DataFrame
-    df = pd.concat(df_list, ignore_index=True)
-    
-    # Data cleaning and transformation
-    df['month'] = pd.to_datetime(df['month'], format='%Y-%m')
-    df['resale_price'] = pd.to_numeric(df['resale_price'], errors='coerce')
-    df['floor_area_sqm'] = pd.to_numeric(df['floor_area_sqm'], errors='coerce')
-    df['remaining_lease_years'] = df['remaining_lease'].str.extract(r'(\d+)').astype(float)
-    df['lease_commence_date'] = pd.to_datetime(df['lease_commence_date'], format='%Y').dt.year
-    
-    return df
+# Load and preprocess the data from CSV files in the "data" directory
+def load_data():
+    files = [f for f in os.listdir("data") if f.endswith('.csv')]
+    dataframes = []
+    for file in files:
+        df = pd.read_csv(os.path.join("data", file))
+        df['month'] = pd.to_datetime(df['month'], format='%Y-%m')
+        dataframes.append(df)
+    return pd.concat(dataframes, ignore_index=True)
 
-# Step 2: Define functions to calculate average price and plot trends
-def calculate_average_resale_price(df):
-    avg_price = df['resale_price'].mean()
-    return f"The average resale price of HDB flats is SGD {avg_price:,.2f}."
+# Load and prepare data
+df = load_data()
 
-def plot_resale_price_trend(df):
-    monthly_trend = df.groupby(df['month'].dt.to_period('M')).resale_price.mean()
-    monthly_trend.index = monthly_trend.index.to_timestamp()
-    
-    fig, ax = plt.subplots()
-    monthly_trend.plot(ax=ax, color='blue', title="Average Resale Price Trend Over Time")
-    ax.set_xlabel("Month")
-    ax.set_ylabel("Average Resale Price (SGD)")
-    
-    st.pyplot(fig)
+# Function to handle data queries
+def handle_query(query, df):
+    response = ""
 
-# Step 3: Define the main function for handling general queries
-def general_query():
-    st.title("General Query on HDB Resale Market")
-    
-    # Load and preprocess the data
-    df = load_and_preprocess_data()
-    
-    st.write("Data loaded successfully with the following columns:")
-    st.write(df.head())
+    # Check for specific keywords in the query
+    if "average resale price" in query.lower():
+        avg_price = df['resale_price'].mean()
+        response = f"The average resale price across all records is approximately ${avg_price:,.2f}."
 
-    user_query = st.text_input("Enter your query about HDB resale trends or prices:")
-    
-    if st.button("Submit"):
-        if "average resale price" in user_query.lower():
-            st.write(calculate_average_resale_price(df))
+    elif "trends over the years" in query.lower():
+        # Calculate average prices per year
+        df['year'] = df['month'].dt.year
+        trends = df.groupby('year')['resale_price'].mean()
         
-        elif "price trend" in user_query.lower():
-            plot_resale_price_trend(df)
+        # Plot the trends
+        plt.figure(figsize=(10, 6))
+        plt.plot(trends.index, trends.values, marker='o')
+        plt.title("Average Resale Price Over the Years")
+        plt.xlabel("Year")
+        plt.ylabel("Average Resale Price")
+        st.pyplot(plt)
         
-        else:
-            # Sending the user's query to OpenAI LLM with enhanced context
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are an assistant that answers questions based on housing data prices. "
+        response = "Here is the trend of average resale prices over the years."
+
+    elif "resale prices by town" in query.lower():
+        town_avg_prices = df.groupby('town')['resale_price'].mean().sort_values(ascending=False)
+        
+        # Display top 5 towns by average price
+        response = "Top towns by average resale prices:\n" + town_avg_prices.head().to_string()
+
+    else:
+        # If query doesn't match predefined types, fallback to LLM for interpretation
+        response = query_llm(query, df)
+    
+    return response
+
+# Function to query OpenAI as fallback
+def query_llm(query, df):
+    # System message for context
+    system_message = {
+        "role": "system",
+        "content": (
+    "You are an assistant that answers questions based on housing data prices. "
                             "You have access to a pandas DataFrame called 'df' that contains information "
                             "about HDB resale transactions, including columns for 'month', 'town', 'flat_type', "
                             "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
                             "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
                             "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
                             "or analyze data as needed to answer the user's queries."
-                        )
-                    },
-                    {"role": "user", "content": f"Use the HDB resale data provided to answer: {user_query}"}
-                ]
-            )
-            st.write(response['choices'][0]['message']['content'])
+
+        )
+    }
+    user_message = {"role": "user", "content": query}
+
+    # Make API call
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[system_message, user_message],
+        max_tokens=150
+    )
+    return response['choices'][0]['message']['content']
+
+# General Query Function
+def general_query():
+    st.title("General Query on HDB Resale Market")
+    user_query = st.text_input("Enter your query about the HDB resale process:")
+
+    if st.button("Submit"):
+        if user_query:
+            # Handle the query
+            response = handle_query(user_query, df)
+            st.write(response)
+        else:
+            st.write("Please enter a query.")
