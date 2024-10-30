@@ -3,4 +3,5 @@ openai
 pandas
 bcrypt
 st
+matplotlib
 openai>=1.0.0
