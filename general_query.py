@@ -62,7 +62,7 @@ def general_query():
     st.write(df.head())
 
     user_query = st.text_input("Enter your query about HDB resale trends or prices:")
-   st.write("E.g. Plot the resale price trend, What is the average resale price")
+    st.write("E.g. Plot the resale price trend, What is the average resale price")
    
     if st.button("Submit"):
         # Directly handle specific queries
