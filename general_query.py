@@ -15,11 +15,20 @@ def load_and_preprocess_data():
     df_list = [pd.read_csv(file) for file in all_files]
     df = pd.concat(df_list, ignore_index=True)
 
+    # Convert all string columns to lowercase
+    df.columns = df.columns.str.lower()  # Change column names to lowercase
     df['month'] = pd.to_datetime(df['month'], format='%Y-%m')
     df['resale_price'] = pd.to_numeric(df['resale_price'], errors='coerce')
     df['floor_area_sqm'] = pd.to_numeric(df['floor_area_sqm'], errors='coerce')
     df['remaining_lease_years'] = df['remaining_lease'].str.extract(r'(\d+)').astype(float)
     df['lease_commence_date'] = pd.to_datetime(df['lease_commence_date'], format='%Y').dt.year
+
+    # Convert string values in relevant columns to lowercase
+    df['town'] = df['town'].str.lower()
+    df['flat_type'] = df['flat_type'].str.lower()
+    df['block'] = df['block'].str.lower()
+    df['street_name'] = df['street_name'].str.lower()
+    df['flat_model'] = df['flat_model'].str.lower()
 
     return df
 
@@ -93,6 +102,7 @@ def general_query():
     st.write(data_summary)
 
     user_query = st.text_input("Enter your query about HDB resale trends or prices:")
+    user_query = user_query.lower()
     st.write("E.g., What is the average resale price for 5-room flats in 2020?")
 
     if st.button("Submit"):
