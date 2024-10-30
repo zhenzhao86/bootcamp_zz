@@ -25,20 +25,14 @@ def load_and_preprocess_data():
 # Step 2: Define functions to handle specific queries
 def average_resale_price(df, flat_type=None, year=None, town=None, area_range=None):
     filtered_df = df.copy()
-
-    # Filter by flat type
+    
+    # Apply filters only if the parameters are provided
     if flat_type:
         filtered_df = filtered_df[filtered_df['flat_type'].str.lower() == flat_type.lower()]
-
-    # Filter by year
     if year:
         filtered_df = filtered_df[filtered_df['month'].dt.year == year]
-
-    # Filter by town
     if town:
         filtered_df = filtered_df[filtered_df['town'].str.lower() == town.lower()]
-
-    # Filter by area range
     if area_range:
         filtered_df = filtered_df[
             (filtered_df['floor_area_sqm'] >= area_range[0]) & 
@@ -57,8 +51,8 @@ def average_resale_price(df, flat_type=None, year=None, town=None, area_range=No
         return "All resale prices are unavailable for the selected criteria."
 
     avg_price = filtered_df['resale_price'].mean()
-    return f"The average resale price is SGD {avg_price:,.2f}."
 
+    return f"The average resale price is SGD {avg_price:,.2f}."
 
 def plot_resale_price_trend(df):
     monthly_trend = df.groupby(df['month'].dt.to_period('M'))['resale_price'].mean()
