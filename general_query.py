@@ -14,7 +14,7 @@ def load_and_preprocess_data():
     df_list = [pd.read_csv(file) for file in all_files]
     df = pd.concat(df_list, ignore_index=True)
 
-    df['year month'] = pd.to_datetime(df['month'], format='%Y-%m')
+    df['month'] = pd.to_datetime(df['month'], format='%Y-%m')
     df['resale_price'] = pd.to_numeric(df['resale_price'], errors='coerce')
     df['floor_area_sqm'] = pd.to_numeric(df['floor_area_sqm'], errors='coerce')
     df['remaining_lease_years'] = df['remaining_lease'].str.extract(r'(\d+)').astype(float)
@@ -32,7 +32,7 @@ def average_resale_price(df, flat_type=None, year=None, town=None, area_range=No
 
     # Filter by year
     if year:
-        filtered_df = filtered_df[filtered_df['year month'].dt.year == year]
+        filtered_df = filtered_df[filtered_df['month'].dt.year == year]
 
     # Filter by town
     if town:
@@ -61,7 +61,7 @@ def average_resale_price(df, flat_type=None, year=None, town=None, area_range=No
 
 
 def plot_resale_price_trend(df):
-    monthly_trend = df.groupby(df['year month'].dt.to_period('M'))['resale_price'].mean()
+    monthly_trend = df.groupby(df['month'].dt.to_period('M'))['resale_price'].mean()
     monthly_trend.index = monthly_trend.index.to_timestamp()
     
     fig, ax = plt.subplots()
@@ -79,12 +79,13 @@ def extract_data_summary(df):
         "Unique Flat Types": df['flat_type'].nunique(),
         "Average Resale Price": df['resale_price'].mean(),
         "Average Floor Area (sqm)": df['floor_area_sqm'].mean(),
-        "Latest Record Date": df['year month'].max().date(),
-        "Earliest Record Date": df['year month'].min().date(),
+        "Latest Record Date": df['month'].max().date(),
+        "Earliest Record Date": df['month'].min().date(),
     }
     return summary
 
-# Step 3: Define main function to handle general queries
+import re
+
 def general_query():
     st.title("General Query on HDB Resale Market")
     
@@ -105,28 +106,29 @@ def general_query():
         # Directly handle specific queries
         try:
             if "average resale price" in user_query.lower():
+                # Extract parameters from the user query
                 flat_type = None
                 year = None
                 town = None
                 area_range = None
                 
-                # Extract flat type from query
-                if "room flats" in user_query.lower():
-                    flat_type = user_query.split(" ")[2]  # This assumes "average resale price for X-room flats"
-                
-                # Extract year from query
-                year_query = next((s for s in user_query.split() if s.isdigit()), None)
-                if year_query:
-                    year = int(year_query)
+                # Use regex to extract the flat type and year
+                flat_type_match = re.search(r'(\d+-room)', user_query.lower())
+                year_match = re.search(r'(\d{4})', user_query)
 
-                # Extract town from query
+                if flat_type_match:
+                    flat_type = flat_type_match.group(0)  # Get the matched flat type
+                if year_match:
+                    year = int(year_match.group(1))  # Convert matched year to int
+
+                # Extract town if present
                 if "in" in user_query.lower():
-                    town_index = user_query.lower().index("in") + 2  # Get index after "in"
-                    town = user_query[town_index:].strip()
+                    town = user_query.split("in")[-1].strip()
 
-                # Debugging outputs
+                # Debugging output
                 st.write(f"Extracted flat type: {flat_type}, year: {year}, town: {town}")
 
+                # Fetch the average resale price based on extracted parameters
                 response = average_resale_price(df, flat_type, year, town, area_range)
                 st.write(response)
                 
@@ -134,27 +136,29 @@ def general_query():
                 plot_resale_price_trend(df)
                 
             else:
-                # If no specific keyword matches, fall back to OpenAI LLM
+                # Prepare the prompt for the LLM
+                llm_prompt = (
+                    "You are an assistant for analyzing HDB resale housing data in Singapore. "
+                    "You have access to a pandas DataFrame called 'df' that contains information "
+                    "about HDB resale transactions, including columns for 'month', 'town', 'flat_type', "
+                    "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
+                    "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
+                    "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
+                    "or analyze data as needed to answer the user's queries. "
+                    f"Here is a summary of the data: {data_summary}. "
+                    f"Based on this data, please answer the following query: {user_query}"
+                )
+
+                # Pass the prompt to the LLM
                 response = openai.ChatCompletion.create(
                     model="gpt-4",
                     messages=[
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are an assistant for analyzing HDB resale housing data in Singapore. "
-                                "You can use the data provided in the context to answer user queries."
-                            )
-                        },
-                        {
-                            "role": "user",
-                            "content": (
-                                f"Here is a summary of the data: {data_summary}. "
-                                f"Now, use the HDB resale data provided to answer: {user_query}"
-                            )
-                        }
+                        {"role": "system", "content": llm_prompt},
+                        {"role": "user", "content": user_query}
                     ]
                 )
-                # Updated way to retrieve the response
+
+                # Output the LLM response
                 st.write(response['choices'][0]['message']['content'])
 
         except Exception as e:
@@ -163,7 +167,6 @@ def general_query():
 # Run the general query function in Streamlit app
 if __name__ == "__main__":
     general_query()
-
 
 
 
