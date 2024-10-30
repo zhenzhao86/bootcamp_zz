@@ -26,12 +26,19 @@ def load_and_preprocess_data():
 def average_resale_price(df, flat_type=None, year=None, town=None, area_range=None):
     filtered_df = df.copy()
 
+    # Filter by flat type
     if flat_type:
         filtered_df = filtered_df[filtered_df['flat_type'].str.lower() == flat_type.lower()]
+
+    # Filter by year
     if year:
         filtered_df = filtered_df[filtered_df['month'].dt.year == year]
+
+    # Filter by town
     if town:
         filtered_df = filtered_df[filtered_df['town'].str.lower() == town.lower()]
+
+    # Filter by area range
     if area_range:
         filtered_df = filtered_df[
             (filtered_df['floor_area_sqm'] >= area_range[0]) & 
@@ -50,7 +57,6 @@ def average_resale_price(df, flat_type=None, year=None, town=None, area_range=No
         return "All resale prices are unavailable for the selected criteria."
 
     avg_price = filtered_df['resale_price'].mean()
-
     return f"The average resale price is SGD {avg_price:,.2f}."
 
 
@@ -99,22 +105,27 @@ def general_query():
         # Directly handle specific queries
         try:
             if "average resale price" in user_query.lower():
-                # Extract parameters from the user query
                 flat_type = None
                 year = None
                 town = None
                 area_range = None
                 
-                # Example extraction logic (this can be expanded for robustness)
+                # Extract flat type from query
                 if "room flats" in user_query.lower():
-                    flat_type = user_query.split(" ")[2]  # Assuming structure "average resale price for X-room flats"
-                if "in" in user_query.lower():
-                    town = user_query.split("in")[-1].strip()
-                if "between" in user_query.lower():
-                    area_range = [int(s) for s in user_query.split() if s.isdigit()]
+                    flat_type = user_query.split(" ")[2]  # This assumes "average resale price for X-room flats"
                 
-                if year_query := next((s for s in user_query.split() if s.isdigit()), None):
+                # Extract year from query
+                year_query = next((s for s in user_query.split() if s.isdigit()), None)
+                if year_query:
                     year = int(year_query)
+
+                # Extract town from query
+                if "in" in user_query.lower():
+                    town_index = user_query.lower().index("in") + 2  # Get index after "in"
+                    town = user_query[town_index:].strip()
+
+                # Debugging outputs
+                st.write(f"Extracted flat type: {flat_type}, year: {year}, town: {town}")
 
                 response = average_resale_price(df, flat_type, year, town, area_range)
                 st.write(response)
