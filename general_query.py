@@ -1,5 +1,3 @@
-# Initialize OpenAI API key
-openai.api_key = st.secrets.api_key
 import openai
 import streamlit as st
 import pandas as pd
