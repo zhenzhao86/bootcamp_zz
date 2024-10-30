@@ -96,67 +96,64 @@ def general_query():
     user_query = st.text_input("Enter your query about HDB resale trends or prices:")
     st.write("E.g., What is the average resale price for 5-room flats in 2020?")
 
-    if st.button("Submit"):
-        # Directly handle specific queries
-        try:
-            if "average resale price" in user_query.lower():
-                # Extract parameters from the user query
-                flat_type = None
-                year = None
-                town = None
-                area_range = None
-                
-                # Use regex to extract the flat type and year
-                flat_type_match = re.search(r'(\d+-room)', user_query.lower())
-                year_match = re.search(r'(\d{4})', user_query)
+ if st.button("Submit"):
+    # Directly handle specific queries
+    try:
+        if "average resale price" in user_query.lower():
+            # Extract parameters from the user query
+            flat_type = None
+            year = None
+            town = None
+            area_range = None
 
-                if flat_type_match:
-                    flat_type = flat_type_match.group(0)  # Get the matched flat type
-                if year_match:
-                    year = int(year_match.group(1))  # Convert matched year to int
+            # Extract flat type using regex
+            flat_type_match = re.search(r'(\d+-room)', user_query, re.IGNORECASE)
+            if flat_type_match:
+                flat_type = flat_type_match.group(1).lower()  # e.g., "5-room"
 
-                # Extract town if present
-                if "in" in user_query.lower():
-                    town = user_query.split("in")[-1].strip()
+            # Extract year (assumed to be a 4-digit number)
+            year_match = re.search(r'(\d{4})', user_query)
+            if year_match:
+                year = int(year_match.group(1))  # e.g., 2020
 
-                # Debugging output
-                st.write(f"Extracted flat type: {flat_type}, year: {year}, town: {town}")
+            # Extract town (after "in" if present)
+            town_match = re.search(r'in ([\w\s]+)', user_query, re.IGNORECASE)
+            if town_match:
+                town = town_match.group(1).strip().lower()  # e.g., "Woodlands"
 
-                # Fetch the average resale price based on extracted parameters
-                response = average_resale_price(df, flat_type, year, town, area_range)
-                st.write(response)
-                
-            elif "price trend" in user_query.lower():
-                plot_resale_price_trend(df)
-                
-            else:
-                # Prepare the prompt for the LLM
-                llm_prompt = (
-                    "You are an assistant for analyzing HDB resale housing data in Singapore. "
-                    "You have access to a pandas DataFrame called 'df' that contains information "
-                    "about HDB resale transactions, including columns for 'month', 'town', 'flat_type', "
-                    "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
-                    "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
-                    "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
-                    "or analyze data as needed to answer the user's queries. "
-                    f"Here is a summary of the data: {data_summary}. "
-                    f"Based on this data, please answer the following query: {user_query}"
-                )
+            if area_range_match := re.search(r'between (\d+)\s*and\s*(\d+)', user_query):
+                area_range = [int(area_range_match.group(1)), int(area_range_match.group(2))]
 
-                # Pass the prompt to the LLM
-                response = openai.ChatCompletion.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": llm_prompt},
-                        {"role": "user", "content": user_query}
-                    ]
-                )
+            response = average_resale_price(df, flat_type, year, town, area_range)
+            st.write(response)
 
-                # Output the LLM response
-                st.write(response['choices'][0]['message']['content'])
+        elif "price trend" in user_query.lower():
+            plot_resale_price_trend(df)
 
-        except Exception as e:
-            st.error(f"Error processing the query: {e}")
+        else:
+            # If no specific keyword matches, fall back to OpenAI LLM
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are an assistant for analyzing HDB resale housing data in Singapore. "
+                            "You have access to a pandas DataFrame called 'df' that contains information "
+                            "about HDB resale transactions, including columns for 'month', 'town', 'flat_type', "
+                            "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
+                            "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
+                            "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
+                            "or analyze data as needed to answer the user's queries. "
+                        )
+                    },
+                    {"role": "user", "content": f"Use the HDB resale data provided to answer: {user_query}"}
+                ]
+            )
+            st.write(response['choices'][0]['message']['content'])
+
+    except Exception as e:
+        st.error(f"Error processing the query: {e}")
 
 # Run the general query function in Streamlit app
 if __name__ == "__main__":
