@@ -62,8 +62,8 @@ def general_query():
     st.write(df.head())
 
     user_query = st.text_input("Enter your query about HDB resale trends or prices:")
-    st.write("E.g., What is the average resale price for 5-room flats in 2020?")
-
+   st.write("E.g. Plot the resale price trend, What is the average resale price")
+   
     if st.button("Submit"):
         # Directly handle specific queries
         try:
@@ -111,7 +111,8 @@ def general_query():
                         {"role": "user", "content": f"Use the HDB resale data provided to answer: {user_query}"}
                     ]
                 )
-                st.write(response['choices'][0]['message']['content'])
+                # Updated way to retrieve the response
+                st.write(response["choices"][0]["message"]["content"])
 
         except Exception as e:
             st.error(f"Error processing the query: {e}")
