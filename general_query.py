@@ -52,6 +52,19 @@ def plot_resale_price_trend(df):
     
     st.pyplot(fig)
 
+def extract_data_summary(df):
+    """Extracts a summary of the DataFrame for context."""
+    summary = {
+        "Total Records": df.shape[0],
+        "Unique Towns": df['town'].nunique(),
+        "Unique Flat Types": df['flat_type'].nunique(),
+        "Average Resale Price": df['resale_price'].mean(),
+        "Average Floor Area (sqm)": df['floor_area_sqm'].mean(),
+        "Latest Record Date": df['month'].max().date(),
+        "Earliest Record Date": df['month'].min().date(),
+    }
+    return summary
+
 # Step 3: Define main function to handle general queries
 def general_query():
     st.title("General Query on HDB Resale Market")
@@ -61,9 +74,14 @@ def general_query():
     st.write("Data loaded successfully with the following columns:")
     st.write(df.head())
 
+    # Extract data summary
+    data_summary = extract_data_summary(df)
+    st.write("Data Summary:")
+    st.write(data_summary)
+
     user_query = st.text_input("Enter your query about HDB resale trends or prices:")
-    st.write("E.g. Plot the resale price trend, What is the average resale price")
-   
+    st.write("E.g., What is the average resale price for 5-room flats in 2020?")
+
     if st.button("Submit"):
         # Directly handle specific queries
         try:
@@ -105,7 +123,8 @@ def general_query():
                                 "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
                                 "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
                                 "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
-                                "or analyze data as needed to answer the user's queries."
+                                "or analyze data as needed to answer the user's queries. "
+                                f"Here is a summary of the data: {data_summary}."
                             )
                         },
                         {"role": "user", "content": f"Use the HDB resale data provided to answer: {user_query}"}
