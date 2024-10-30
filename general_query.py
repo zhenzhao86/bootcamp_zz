@@ -1,82 +1,81 @@
 import openai
-import pandas as pd
-import os
 import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import glob
+import os
 
-# You can replace this with the actual API key after signing up
-openai.api_key = st.secrets.api_key
-
-# Load and preprocess the HDB resale dataset
-def load_data():
-    # Load the CSV file
-    df = pd.read_csv('/data/Resale flat prices based on registration date from Jan-2017 onwards.csv')
+# Step 1: Load and concatenate CSV files from the data folder
+def load_and_preprocess_data():
+    # Load all CSV files in the data folder
+    all_files = glob.glob(os.path.join("data", "*.csv"))
+    df_list = [pd.read_csv(file) for file in all_files]
     
-    # Preprocess data
-    df['month'] = pd.to_datetime(df['month'], format='%Y-%m')  # Convert month to datetime
-    df['lease_commence_date'] = pd.to_datetime(df['lease_commence_date'], format='%Y')  # Convert lease start to datetime
-    df['storey_range'] = df['storey_range'].astype(str)  # Ensure storey range is string
-    df['flat_type'] = df['flat_type'].astype(str)  # Ensure flat type is string
+    # Concatenate all CSV files into a single DataFrame
+    df = pd.concat(df_list, ignore_index=True)
+    
+    # Data cleaning and transformation
+    df['month'] = pd.to_datetime(df['month'], format='%Y-%m')
+    df['resale_price'] = pd.to_numeric(df['resale_price'], errors='coerce')
+    df['floor_area_sqm'] = pd.to_numeric(df['floor_area_sqm'], errors='coerce')
+    df['remaining_lease_years'] = df['remaining_lease'].str.extract(r'(\d+)').astype(float)
+    df['lease_commence_date'] = pd.to_datetime(df['lease_commence_date'], format='%Y').dt.year
     
     return df
 
-# Analysis functions
-def calculate_average_price(df):
+# Step 2: Define functions to calculate average price and plot trends
+def calculate_average_resale_price(df):
     avg_price = df['resale_price'].mean()
-    return f"The average resale price is ${avg_price:.2f}"
+    return f"The average resale price of HDB flats is SGD {avg_price:,.2f}."
 
-def plot_price_trend(df):
-    # Monthly average resale price trend
-    trend_df = df.groupby(df['month'].dt.to_period('M')).resale_price.mean()
-    trend_df.index = trend_df.index.to_timestamp()
+def plot_resale_price_trend(df):
+    monthly_trend = df.groupby(df['month'].dt.to_period('M')).resale_price.mean()
+    monthly_trend.index = monthly_trend.index.to_timestamp()
     
     fig, ax = plt.subplots()
-    trend_df.plot(ax=ax, color='blue')
-    ax.set_title('Average HDB Resale Price Over Time')
-    ax.set_xlabel('Month')
-    ax.set_ylabel('Average Resale Price ($)')
+    monthly_trend.plot(ax=ax, color='blue', title="Average Resale Price Trend Over Time")
+    ax.set_xlabel("Month")
+    ax.set_ylabel("Average Resale Price (SGD)")
+    
     st.pyplot(fig)
 
-def plot_flat_type_distribution(df):
-    # Flat type distribution
-    fig, ax = plt.subplots()
-    df['flat_type'].value_counts().plot(kind='bar', ax=ax, color='green')
-    ax.set_title('Distribution of HDB Flat Types')
-    ax.set_xlabel('Flat Type')
-    ax.set_ylabel('Count')
-    st.pyplot(fig)
-
+# Step 3: Define the main function for handling general queries
 def general_query():
     st.title("General Query on HDB Resale Market")
     
-    # Load the dataset
-    df = load_data()
+    # Load and preprocess the data
+    df = load_and_preprocess_data()
     
-    user_query = st.text_input("Enter your query about HDB resale trends, prices, or flat types:")
+    st.write("Data loaded successfully with the following columns:")
+    st.write(df.head())
+
+    user_query = st.text_input("Enter your query about HDB resale trends or prices:")
     
     if st.button("Submit"):
-        if user_query:
-            # Determine user query type and process accordingly
-            if "average resale price" in user_query.lower():
-                st.write(calculate_average_price(df))
-            
-            elif "price trend" in user_query.lower() or "housing trends" in user_query.lower():
-                st.write("Here is the average resale price trend over time:")
-                plot_price_trend(df)
-            
-            elif "flat type distribution" in user_query.lower():
-                st.write("Here is the distribution of different flat types in the dataset:")
-                plot_flat_type_distribution(df)
-            
-            else:
-                # Use OpenAI for complex or unspecified queries
-                response = openai.ChatCompletion.create(
-                    model="gpt-4",  # or "gpt-3.5-turbo"
-                    messages=[
-                        {"role": "system", "content": "You are an HDB resale assistant specializing in the Singapore housing market. Use the data provided to give accurate information on HDB resale prices and trends."},
-                        {"role": "user", "content": f"Answer this query based on HDB resale data: {user_query}"}
-                    ],
-                    max_tokens=200
-                )
-                st.write(response['choices'][0]['message']['content'])
+        if "average resale price" in user_query.lower():
+            st.write(calculate_average_resale_price(df))
+        
+        elif "price trend" in user_query.lower():
+            plot_resale_price_trend(df)
+        
         else:
-            st.write("Please enter a query.")
+            # Sending the user's query to OpenAI LLM with enhanced context
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are an assistant that answers questions based on housing data prices. "
+                            "You have access to a pandas DataFrame called 'df' that contains information "
+                            "about HDB resale transactions, including columns for 'month', 'town', 'flat_type', "
+                            "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
+                            "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
+                            "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
+                            "or analyze data as needed to answer the user's queries."
+                        )
+                    },
+                    {"role": "user", "content": f"Use the HDB resale data provided to answer: {user_query}"}
+                ]
+            )
+            st.write(response['choices'][0]['message']['content'])
