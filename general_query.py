@@ -38,8 +38,21 @@ def average_resale_price(df, flat_type=None, year=None, town=None, area_range=No
             (filtered_df['floor_area_sqm'] <= area_range[1])
         ]
 
+    # Debugging output: show the filtered DataFrame
+    st.write("Filtered DataFrame for average resale price calculation:")
+    st.write(filtered_df)
+
+    if filtered_df.empty:
+        return "No records found matching the criteria."
+
+    # Check for NaN values in resale_price
+    if filtered_df['resale_price'].isna().all():
+        return "All resale prices are unavailable for the selected criteria."
+
     avg_price = filtered_df['resale_price'].mean()
+
     return f"The average resale price is SGD {avg_price:,.2f}."
+
 
 def plot_resale_price_trend(df):
     monthly_trend = df.groupby(df['month'].dt.to_period('M'))['resale_price'].mean()
