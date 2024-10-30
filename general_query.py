@@ -14,7 +14,7 @@ def load_and_preprocess_data():
     df_list = [pd.read_csv(file) for file in all_files]
     df = pd.concat(df_list, ignore_index=True)
 
-    df['month'] = pd.to_datetime(df['month'], format='%Y-%m')
+    df['year month'] = pd.to_datetime(df['month'], format='%Y-%m')
     df['resale_price'] = pd.to_numeric(df['resale_price'], errors='coerce')
     df['floor_area_sqm'] = pd.to_numeric(df['floor_area_sqm'], errors='coerce')
     df['remaining_lease_years'] = df['remaining_lease'].str.extract(r'(\d+)').astype(float)
@@ -32,7 +32,7 @@ def average_resale_price(df, flat_type=None, year=None, town=None, area_range=No
 
     # Filter by year
     if year:
-        filtered_df = filtered_df[filtered_df['month'].dt.year == year]
+        filtered_df = filtered_df[filtered_df['year month'].dt.year == year]
 
     # Filter by town
     if town:
@@ -61,7 +61,7 @@ def average_resale_price(df, flat_type=None, year=None, town=None, area_range=No
 
 
 def plot_resale_price_trend(df):
-    monthly_trend = df.groupby(df['month'].dt.to_period('M'))['resale_price'].mean()
+    monthly_trend = df.groupby(df['year month'].dt.to_period('M'))['resale_price'].mean()
     monthly_trend.index = monthly_trend.index.to_timestamp()
     
     fig, ax = plt.subplots()
@@ -79,8 +79,8 @@ def extract_data_summary(df):
         "Unique Flat Types": df['flat_type'].nunique(),
         "Average Resale Price": df['resale_price'].mean(),
         "Average Floor Area (sqm)": df['floor_area_sqm'].mean(),
-        "Latest Record Date": df['month'].max().date(),
-        "Earliest Record Date": df['month'].min().date(),
+        "Latest Record Date": df['year month'].max().date(),
+        "Earliest Record Date": df['year month'].min().date(),
     }
     return summary
 
