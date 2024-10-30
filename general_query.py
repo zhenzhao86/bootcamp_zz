@@ -37,7 +37,13 @@ def calculate_average_resale_price(df):
     avg_price = df['resale_price'].mean()
     return f"The average resale price of HDB flats is SGD {avg_price:,.2f}."
 
-def plot_resale_price_trend(df):
+def plot_resale_price_trend(df, start_date=None, end_date=None):
+    # Filter the DataFrame based on the specified date range
+    if start_date:
+        df = df[df['month'] >= start_date]
+    if end_date:
+        df = df[df['month'] <= end_date]
+
     monthly_trend = df.groupby(df['month'].dt.to_period('M')).resale_price.mean()
     monthly_trend.index = monthly_trend.index.to_timestamp()
     
@@ -47,6 +53,7 @@ def plot_resale_price_trend(df):
     ax.set_ylabel("Average Resale Price (SGD)")
     
     st.pyplot(fig)
+    
 
 # Step 3: Define main function to handle general queries
 def general_query():
@@ -58,9 +65,19 @@ def general_query():
     st.write(df.head())
 
     user_query = st.text_input("Enter your query about HDB resale trends or prices, based on the dataset above:")
-    st.write("E.g. Plot the resale price trend from 2017 to 2020")
+    st.write("E.g. Plot the resale price trend, What is the average resale price")
 
     if st.button("Submit"):
+       # Initialize variables for date range
+        start_date = None
+        end_date = None
+        
+        # Use regex to extract dates from user_query
+        date_range = re.findall(r'(\d{4})\s*-\s*(\d{4})', user_query)
+        if date_range:
+            start_date = pd.to_datetime(f"{date_range[0][0]}-01-01")  # Start of the first year
+            end_date = pd.to_datetime(f"{date_range[0][1]}-12-31")  # End of the last year
+
         # Directly handle queries with specific keywords
         if "average resale price" in user_query.lower():
             st.write(calculate_average_resale_price(df))
