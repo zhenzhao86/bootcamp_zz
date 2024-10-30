@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import glob
 import os
+import re
 
 # Initialize OpenAI API key
 openai.api_key = st.secrets.api_key
@@ -96,64 +97,64 @@ def general_query():
     user_query = st.text_input("Enter your query about HDB resale trends or prices:")
     st.write("E.g., What is the average resale price for 5-room flats in 2020?")
 
- if st.button("Submit"):
-    # Directly handle specific queries
-    try:
-        if "average resale price" in user_query.lower():
-            # Extract parameters from the user query
-            flat_type = None
-            year = None
-            town = None
-            area_range = None
+    if st.button("Submit"):
+        # Directly handle specific queries
+        try:
+            if "average resale price" in user_query.lower():
+                # Extract parameters from the user query
+                flat_type = None
+                year = None
+                town = None
+                area_range = None
 
-            # Extract flat type using regex
-            flat_type_match = re.search(r'(\d+-room)', user_query, re.IGNORECASE)
-            if flat_type_match:
-                flat_type = flat_type_match.group(1).lower()  # e.g., "5-room"
+                # Extract flat type using regex
+                flat_type_match = re.search(r'(\d+-room)', user_query, re.IGNORECASE)
+                if flat_type_match:
+                    flat_type = flat_type_match.group(1).lower()  # e.g., "5-room"
 
-            # Extract year (assumed to be a 4-digit number)
-            year_match = re.search(r'(\d{4})', user_query)
-            if year_match:
-                year = int(year_match.group(1))  # e.g., 2020
+                # Extract year (assumed to be a 4-digit number)
+                year_match = re.search(r'(\d{4})', user_query)
+                if year_match:
+                    year = int(year_match.group(1))  # e.g., 2020
 
-            # Extract town (after "in" if present)
-            town_match = re.search(r'in ([\w\s]+)', user_query, re.IGNORECASE)
-            if town_match:
-                town = town_match.group(1).strip().lower()  # e.g., "Woodlands"
+                # Extract town (after "in" if present)
+                town_match = re.search(r'in ([\w\s]+)', user_query, re.IGNORECASE)
+                if town_match:
+                    town = town_match.group(1).strip().lower()  # e.g., "Woodlands"
 
-            if area_range_match := re.search(r'between (\d+)\s*and\s*(\d+)', user_query):
-                area_range = [int(area_range_match.group(1)), int(area_range_match.group(2))]
+                if area_range_match := re.search(r'between (\d+)\s*and\s*(\d+)', user_query):
+                    area_range = [int(area_range_match.group(1)), int(area_range_match.group(2))]
 
-            response = average_resale_price(df, flat_type, year, town, area_range)
-            st.write(response)
+                response = average_resale_price(df, flat_type, year, town, area_range)
+                st.write(response)
 
-        elif "price trend" in user_query.lower():
-            plot_resale_price_trend(df)
+            elif "price trend" in user_query.lower():
+                plot_resale_price_trend(df)
 
-        else:
-            # If no specific keyword matches, fall back to OpenAI LLM
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are an assistant for analyzing HDB resale housing data in Singapore. "
-                            "You have access to a pandas DataFrame called 'df' that contains information "
-                            "about HDB resale transactions, including columns for 'month', 'town', 'flat_type', "
-                            "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
-                            "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
-                            "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
-                            "or analyze data as needed to answer the user's queries. "
-                        )
-                    },
-                    {"role": "user", "content": f"Use the HDB resale data provided to answer: {user_query}"}
-                ]
-            )
-            st.write(response['choices'][0]['message']['content'])
+            else:
+                # If no specific keyword matches, fall back to OpenAI LLM
+                response = openai.ChatCompletion.create(
+                    model="gpt-4",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are an assistant for analyzing HDB resale housing data in Singapore. "
+                                "You have access to a pandas DataFrame called 'df' that contains information "
+                                "about HDB resale transactions, including columns for 'month', 'town', 'flat_type', "
+                                "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
+                                "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
+                                "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
+                                "or analyze data as needed to answer the user's queries. "
+                            )
+                        },
+                        {"role": "user", "content": f"Use the HDB resale data provided to answer: {user_query}"}
+                    ]
+                )
+                st.write(response['choices'][0]['message']['content'])
 
-    except Exception as e:
-        st.error(f"Error processing the query: {e}")
+        except Exception as e:
+            st.error(f"Error processing the query: {e}")
 
 # Run the general query function in Streamlit app
 if __name__ == "__main__":
