@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 import glob
 import os
 
+# Initialize OpenAI API key
+# openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = st.secrets.api_key
+
 # Step 1: Load and concatenate CSV files from the data folder
 def load_and_preprocess_data():
     # Load all CSV files in the data folder
