@@ -36,7 +36,11 @@ def load_and_preprocess_data():
 # Step 2: Define functions to handle specific queries
 def average_resale_price(df, flat_type=None, year=None, town=None, area_range=None):
     filtered_df = df.copy()
-    
+
+    # Convert relevant columns to strings and fill NaNs to avoid errors
+    filtered_df['flat_type'] = filtered_df['flat_type'].fillna('').astype(str)
+    filtered_df['town'] = filtered_df['town'].fillna('').astype(str)
+
     # Apply filters only if the parameters are provided
     if flat_type:
         filtered_df = filtered_df[filtered_df['flat_type'].str.contains(flat_type, na=False)]
@@ -50,25 +54,20 @@ def average_resale_price(df, flat_type=None, year=None, town=None, area_range=No
             (filtered_df['floor_area_sqm'] <= area_range[1])
         ]
 
-    # Debugging output: show the filtered DataFrame
-    st.write("Filtered DataFrame for average resale price calculation:")
-    st.write(filtered_df)
-
     if filtered_df.empty:
         return "No records found matching the criteria."
 
-    # Check for NaN values in resale_price
-    if filtered_df['resale_price'].isna().all():
-        return "All resale prices are unavailable for the selected criteria."
-
     avg_price = filtered_df['resale_price'].mean()
-
     return f"The average resale price is SGD {avg_price:,.2f}."
 
+
 def plot_resale_price_trend(df, flat_type=None, year=None, town=None):
-    # Filter the DataFrame based on the parameters provided
     filtered_df = df.copy()
-    
+
+    # Convert relevant columns to strings and fill NaNs to avoid errors
+    filtered_df['flat_type'] = filtered_df['flat_type'].fillna('').astype(str)
+    filtered_df['town'] = filtered_df['town'].fillna('').astype(str)
+
     if flat_type:
         filtered_df = filtered_df[filtered_df['flat_type'].str.lower() == flat_type.lower()]
     if year:
@@ -76,7 +75,6 @@ def plot_resale_price_trend(df, flat_type=None, year=None, town=None):
     if town:
         filtered_df = filtered_df[filtered_df['town'].str.lower() == town.lower()]
 
-    # Group by month and calculate average resale price
     monthly_trend = filtered_df.groupby(filtered_df['month'].dt.to_period('M'))['resale_price'].mean()
     monthly_trend.index = monthly_trend.index.to_timestamp()
     
