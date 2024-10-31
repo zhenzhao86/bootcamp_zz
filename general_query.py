@@ -199,9 +199,9 @@ def general_query():
                     The columns in the DataFrame are: {', '.join(df.columns)}
                     Here is a summary of the data: {data_summary}. 
                     
-                    Use the following format in your response: [QQ]df.your_pandas_query[/QQ]. 
-                    For example, to calculate average resale price, use: [QQ]df['resale_price'].mean()[/QQ]. 
-                    The 'month' column is a datetime object. Handle it properly. E.g. To filter 2020, use [QQ]df[df['month'].dt.year == 2020][/QQ]
+                    Use the following format in your response: [QUERY]df.your_pandas_query[/QUERY]. 
+                    For example, to calculate average resale price, use: [QUERY]df['resale_price'].mean()[/QUERY]. 
+                    The 'month' column is a datetime object. Handle it properly. E.g. To filter 2020, use [QUERY]df[df['month'].dt.year == 2020][/QUERY]
 
                     DO NOT assign variable names to your query.
                     Answer the following query from the user: {user_query}.
