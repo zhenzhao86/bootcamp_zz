@@ -222,7 +222,7 @@ def general_query():
                 # Output the LLM response
                 final_response = process_ai_response_with_dataframe_queries(llm_response, df)
 
-                st.write(llm_response)
+                st.write(final_response)
 
         except Exception as e:
             st.error(f"Error processing the query: {e}")
