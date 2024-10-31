@@ -96,6 +96,7 @@ def process_query(df, user_query, data_summary):
         return f"Error processing the query: {e}"
 
 
+# Main query function with session state to handle one-time submission
 def general_query():
     st.title("General Query on HDB Resale Market")
 
@@ -105,12 +106,20 @@ def general_query():
 
     data_summary = extract_data_summary(df)
     user_query = st.text_input("Enter your query about HDB resale trends or prices:")
-    submit_button = st.button("Submit")
+    
+    if "submit_clicked" not in st.session_state:
+        st.session_state.submit_clicked = False
 
-    if submit_button and user_query:
+    if st.button("Submit"):
+        st.session_state.submit_clicked = True
+
+    if st.session_state.submit_clicked and user_query:
         response = process_query(df, user_query, data_summary)
         if "Error executing query" in response:
             st.error("There was an issue processing your query. Please try again with a different question.")
         else:
             st.write("Response:")
             st.write(response)
+        
+        # Reset the submission flag to allow for a new query on the next button click
+        st.session_state.submit_clicked = False
