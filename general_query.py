@@ -180,6 +180,11 @@ def general_query():
                 When matching user queries, remember to look for substrings instead of exact matches. 
                 Use the following format in your response: [QUERY]data.your_pandas_query_here[/QUERY]. 
                 For example, to calculate average resale price, use: [QUERY]data['resale_price'].mean()[/QUERY]. 
+
+                Do not assign varaible name to your query. e.g. dont assign data_2020 = query
+                Use DataFrame queries when needed to provide accurate and specific answers.
+                Use separate [QUERY] blocks if mutliple steps are required and explain step by step.
+                
                 "Based on this data,  answer the following query from user: {user_query}."
             )
             """
