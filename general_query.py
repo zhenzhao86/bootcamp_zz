@@ -184,7 +184,7 @@ def general_query():
                 Do not assign varaible name to your query. e.g. dont assign data_2020 = query
                 Use DataFrame queries when needed to provide accurate and specific answers.
                 Use separate [QUERY] blocks if mutliple steps are required and explain step by step.
-                
+
                 "Based on this data,  answer the following query from user: {user_query}."
             )
             """
@@ -200,6 +200,7 @@ def general_query():
 
             llm_response = response['choices'][0]['message']['content']
 
+            st.write(llm_response)
             # Output the LLM response
             final_response = process_ai_response_with_dataframe_queries(llm_response, df)
 
