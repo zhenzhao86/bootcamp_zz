@@ -4,5 +4,5 @@ pandas
 bcrypt
 st
 matplotlib
-openai>=0.28
+openai==0.28
 python-dotenv==1.0.1
