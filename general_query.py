@@ -165,16 +165,15 @@ def general_query():
                 The columns in the DataFrame are: {', '.join(df.columns)}
                 You can query the DataFrame df using Python pandas syntax to filter, aggregate, or analyze data as needed to answer the user's queries. 
                 Here is a summary of the data: {data_summary}. 
+            
                 
-                When matching user queries, remember to look for substrings instead of exact matches. 
-                
-                Use the following format in your response: [QUERY]data.your_pandas_query_here[/QUERY]. 
-                For example, to calculate average resale price, use: [QUERY]data['resale_price'].mean()[/QUERY]. 
+                Use the following format in your response: [QUERY]df.your_pandas_query[/QUERY]. 
+                For example, to calculate average resale price, use: [QUERY]df['resale_price'].mean()[/QUERY]. 
                 The 'month' column is a datetime object. Handle it properly. E.g. To filter 2020, use df[df['month'].dt.year == 2020
 
                 DO NOT assign variable names to your query. e.g. don't assign df2020 = query.
                 Use DataFrame queries when needed to provide accurate and specific answers.
-                Use separate [QUERY] blocks if multiple steps are required and explain the purpose. 
+                Use separate [QUERY] blocks if multiple steps are required, explain after every block.
                 Make sure the code within your [QUERY][/QUERY] block can run without error.
                 
                 Answer the following query from the user: {user_query}.
