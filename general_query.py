@@ -189,7 +189,7 @@ def general_query():
                 ]
             )
 
-            llm_response = response.['choices'][0].['message'].['content']
+            llm_response = response.choices[0].message.content
             st.write(llm_response)
 
             # Execute DataFrame queries in the response (in QUERY blocks)
