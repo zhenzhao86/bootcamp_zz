@@ -4,7 +4,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import glob
 import os
-import numpy as np  # Added missing import for numpy
+import re  # Regular expression module
+import numpy as np  # For handling numerical operations
 
 # Initialize the OpenAI client
 openai.api_key = st.secrets["OPENAI_API_KEY"]
