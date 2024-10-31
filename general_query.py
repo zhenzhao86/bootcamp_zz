@@ -5,25 +5,9 @@ import matplotlib.pyplot as plt
 import glob
 import os
 import re
-# from dotenv import load_dotenv
-
-# Load environment variables from .env file
-# load_dotenv()
-
-# # Access the OpenAI API key
-# openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Initialize the OpenAI client (Optional)
 openai.api_key = st.secrets["OPENAI_API_KEY"]
-
-
-# Initialize OpenAI API key
-# openai.api_key = st.secrets.api_key
-# OPENAI_API_KEY= st.secrets.api_key
-# client = OpenAI(api_key=os.getenv(st.secrets.api_key))
-# Set up OpenAI client
-
-# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 # Step 1: Load and preprocess data
@@ -116,6 +100,44 @@ def extract_data_summary(df):
     }
     return summary
 
+# This function takes a response containing DataFrame queries, executes the queries,
+# and replaces the placeholders in the response with the results.
+
+def process_ai_response_with_dataframe_queries(ai_response, data):
+    # Loop through the response text as long as there are queries marked by [QUERY] and [/QUERY]
+    while "[QUERY]" in ai_response and "[/QUERY]" in ai_response:
+        
+        # Find the start and end positions of the query within the response
+        start = ai_response.index("[QUERY]") + len("[QUERY]")
+        end = ai_response.index("[/QUERY]")
+        
+        # Extract the query text from between [QUERY] and [/QUERY] tags
+        query = ai_response[start:end]
+
+        # Execute the query on the provided DataFrame 'data' and get the result
+        result = query_dataframe(data, query)  # Assume 'query_dataframe' is a helper function to run queries
+        
+        # Format the result to make it easier to read based on its type
+        if isinstance(result, pd.DataFrame):
+            # If the result is a DataFrame, show just the first row to keep it brief
+            result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
+        elif isinstance(result, pd.Series):
+            # If it's a Series (a single column), also show the first row
+            result_str = f"\n{result.head(1).to_string()}\n...(showing first row of series)"
+        elif isinstance(result, np.ndarray):
+            # If the result is an array (e.g., from calculations), convert it to a string
+            result_str = str(result)
+        else:
+            # For any other type (like a single value), just convert it to a string
+            result_str = str(result)
+        
+        # Replace the original [QUERY]...[/QUERY] part with the actual result string
+        ai_response = ai_response.replace(f"[QUERY]{query}[/QUERY]", result_str)
+    
+    # Return the modified response with all queries replaced by their results
+    return ai_response
+
+
 def general_query():
     st.title("General Query on HDB Resale Market")
     
@@ -176,10 +198,14 @@ def general_query():
                 "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
                 "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
                 "or analyze data as needed to answer the user's queries. "
-                f"Here is the HDB resale data in df: {df}."
                 f"Here is a summary of the data: {data_summary}. "
+  
+                "When matching user queries, remember to look for substrings instead of exact matches.
+                "Use the following format in your response:[QUERY]data.your_pandas_query_here[/QUERY]"
+                "For example, to calculate average resale price, use:[QUERY]data['resale_price'].mean()[/QUERY]
+                
                 f"Based on this data, please answer the following query: {user_query}."
-                "When matching user queries, remember to look for substrings instead of exact matches."
+                "
             )
 
             # Pass the prompt to the LLM using the new API interface
@@ -192,7 +218,9 @@ def general_query():
             )
 
             # Output the LLM response
-            st.write(response['choices'][0]['message']['content'])
+            final_response = process_ai_response_with_dataframe_queries(response['choices'][0]['message']['content']), df)
+
+            st.write(final_response)
 
         except Exception as e:
             st.error(f"Error processing the query: {e}")
