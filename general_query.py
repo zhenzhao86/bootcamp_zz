@@ -226,68 +226,25 @@ def general_query():
 import re
 
 def query_dataframe(data, query):
-    # Convert query to lowercase to make it case-insensitive
-    query = query.lower()
+    # Allowed environment to restrict eval scope
+    allowed_env = {"data": data, "pd": pd, "np": np}
     
-    # Check if query is asking for an average resale price
-    if "average resale price" in query:
-        # Extract flat type, year, and town if mentioned in the query
-        flat_type_match = re.search(r'(\d+\s?[-]?\s?room)', query)
-        year_match = re.search(r'(\d{4})', query)
-        town_match = re.search(r'(?i)\b(ang mo kio|bedok|bishan|bukit batok|bukit merah|bukit panjang|bukit timah|central area|choa chu kang|clementi|geylang|hougang|jurong east|jurong west|kallang/whampoa|marine parade|pasir ris|punggol|queenstown|sembawang|sengkang|serangoon|tampines|toa payoh|woodlands|yishun)\b', query)
+    try:
+        # Evaluate the query within the restricted environment
+        result = eval(query, {"__builtins__": None}, allowed_env)
         
-        # Initialize filters
-        flat_type = flat_type_match.group(0).replace('-', ' ').strip() if flat_type_match else None
-        year = int(year_match.group(1)) if year_match else None
-        town = town_match.group(0).strip() if town_match else None
-        
-        # Apply the filters on the DataFrame
-        filtered_df = data.copy()
-        
-        if flat_type:
-            filtered_df = filtered_df[filtered_df['flat_type'].str.contains(flat_type, na=False)]
-        if year:
-            filtered_df = filtered_df[filtered_df['month'].dt.year == year]
-        if town:
-            filtered_df = filtered_df[filtered_df['town'].str.contains(town, na=False)]
-        
-        # Calculate the average resale price if there are matching records
-        if filtered_df.empty:
-            return "No records found matching the criteria."
-        
-        avg_price = filtered_df['resale_price'].mean()
-        return f"Average resale price: SGD {avg_price:,.2f}"
-    
-    # Check if query is asking for a price trend
-    elif "price trend" in query:
-        # Extract flat type, year, and town if mentioned in the query
-        flat_type_match = re.search(r'(\d+\s?[-]?\s?room)', query)
-        year_match = re.findall(r'(\d{4})', query)  # Use findall to capture multiple years
-        town_match = re.search(r'(?i)\b(ang mo kio|bedok|bishan|bukit batok|bukit merah|bukit panjang|bukit timah|central area|choa chu kang|clementi|geylang|hougang|jurong east|jurong west|kallang/whampoa|marine parade|pasir ris|punggol|queenstown|sembawang|sengkang|serangoon|tampines|toa payoh|woodlands|yishun)\b', query)
-        
-        flat_type = flat_type_match.group(0).replace('-', ' ').strip() if flat_type_match else None
-        year_start, year_end = (int(year_match[0]), int(year_match[1])) if len(year_match) == 2 else (None, None)
-        town = town_match.group(0).strip() if town_match else None
-        
-        # Filter data by flat type and town
-        filtered_df = data.copy()
-        
-        if flat_type:
-            filtered_df = filtered_df[filtered_df['flat_type'].str.contains(flat_type, na=False)]
-        if town:
-            filtered_df = filtered_df[filtered_df['town'].str.contains(town, na=False)]
-        if year_start and year_end:
-            filtered_df = filtered_df[(filtered_df['month'].dt.year >= year_start) & (filtered_df['month'].dt.year <= year_end)]
-        
-        # Group by month and calculate average resale price
-        trend = filtered_df.groupby(filtered_df['month'].dt.to_period('M'))['resale_price'].mean()
-        
-        return trend if not trend.empty else "No data available for the specified period."
-    
-    # If the query format is unrecognized
-    return "Query format not recognized. Please refine your question."
-
-
+        # Handle and return different result types
+        if isinstance(result, pd.DataFrame):
+            return result
+        elif isinstance(result, pd.Series):
+            return result
+        elif isinstance(result, np.ndarray):
+            return result
+        else:
+            return str(result)
+    except Exception as e:
+        # Provide a clear error message on failure
+        return f"Error executing query: {str(e)}"
 
 # Run the general query function in Streamlit app
 if __name__ == "__main__":
