@@ -8,6 +8,8 @@ import re
 
 # Initialize OpenAI API key
 openai.api_key = st.secrets.api_key
+client = OpenAI(api_key=os.getenv(st.secrets.api_key))
+
 
 # Step 1: Load and preprocess data
 def load_and_preprocess_data():
@@ -166,8 +168,8 @@ def general_query():
             )
 
             # Pass the prompt to the LLM using the new API interface
-            response = openai.Chat.create(
-                model="gpt-4",
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": llm_prompt},
                     {"role": "user", "content": user_query}
