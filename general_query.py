@@ -171,21 +171,18 @@ def general_query():
         # Directly handle specific queries
         try: 
             # Prepare the prompt for the LLM
-            llm_prompt = (
-                "You are an assistant for analyzing HDB resale housing data in Singapore. "
-                "You have access to a pandas DataFrame called 'df' that contains information "
-                "about HDB resale transactions, including columns for 'month', 'town', 'flat_type', "
-                "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
-                "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
-                "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
-                "or analyze data as needed to answer the user's queries. "
-                f"Here is a summary of the data, and the columns you have access to: {data_summary}. "
+            llm_prompt = f"""(
+                You are an assistant for analyzing HDB resale housing data in Singapore. 
+                You have access to a pandas DataFrame called 'df' that contains information about HDB resale transactions. The columns in the DataFrame are: {', '.join(data.columns)}
+                You can query the DataFrame using Python pandas syntax to filter, aggregate, or analyze data as needed to answer the user's queries. 
+                Here is a summary of the dat: {data_summary}. 
   
-                "When matching user queries, remember to look for substrings instead of exact matches. "
-                "Use the following format in your response: [QUERY]data.your_pandas_query_here[/QUERY]. "
-                "For example, to calculate average resale price, use: [QUERY]data['resale_price'].mean()[/QUERY]. "
-                f"Based on this data, please answer the following query: {user_query}."
+                When matching user queries, remember to look for substrings instead of exact matches. 
+                Use the following format in your response: [QUERY]data.your_pandas_query_here[/QUERY]. 
+                For example, to calculate average resale price, use: [QUERY]data['resale_price'].mean()[/QUERY]. 
+                "Based on this data,  answer the following query from user: {user_query}."
             )
+            """
 
             # Pass the prompt to the LLM using the new API interface
             response = openai.ChatCompletion.create(
