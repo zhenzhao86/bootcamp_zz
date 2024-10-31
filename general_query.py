@@ -231,18 +231,12 @@ def general_query():
 import re
 
 def query_dataframe(data, query):
-    # Allowed environment to restrict eval scope
-    allowed_env = {"data": data, "pd": pd, "np": np}
-
     try:
-        # Evaluate the query within the restricted environment
-        result = eval(query, {"__builtins__": None}, allowed_env)
+        # Ensure query is not None or empty before evaluating
+        if query is None or query.strip() == "":
+            return "Error: No query provided to evaluate."
         
-        # Debugging output
-        print(f"Query: {query}")
-        print(f"Result type: {type(result)}")
-        
-        # Handle and return different result types
+        result = eval(query)
         if isinstance(result, pd.DataFrame):
             return result
         elif isinstance(result, pd.Series):
@@ -250,9 +244,8 @@ def query_dataframe(data, query):
         elif isinstance(result, np.ndarray):
             return result
         else:
-            return str(result)  # Convert to string for other types
+            return result
     except Exception as e:
-        # Provide a clear error message on failure
         return f"Error executing query: {str(e)}"
 
 # Run the general query function in Streamlit app
