@@ -18,7 +18,8 @@ def load_and_preprocess_data():
 
 def affordability_calculator():
     st.title("HDB Resale Housing Affordability Calculator")
-    
+    df = load_and_preprocess_data()
+
     # Collect user inputs
     income = st.number_input("Enter your monthly household income (SGD)", min_value=0)
     savings = st.number_input("Enter your total savings (CPF + cash) (SGD)", min_value=0)
@@ -70,6 +71,3 @@ def affordability_calculator():
         )
         st.write(response['choices'][0]['message']['content'])
 
-# Load data and run the calculator
-df = load_and_preprocess_data()
-affordability_calculator(df)
