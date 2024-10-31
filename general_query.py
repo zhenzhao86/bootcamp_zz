@@ -121,12 +121,12 @@ def general_query():
     if st.button("Submit"):
         # Directly handle specific queries
         try:
+            # Extract parameters from the user query
+            flat_type = None
+            year = None
+            town = None
+
             if "average resale price" in user_query:
-                # Extract parameters from the user query
-                flat_type = None
-                year = None
-                town = None
-                
                 # Use regex to extract the flat type, year, and town
                 flat_type_match = re.search(r'(\d+\s?[-]?\s?room)', user_query)
                 year_match = re.search(r'(\d{4})', user_query)
