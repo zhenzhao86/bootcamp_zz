@@ -6,9 +6,15 @@ import glob
 import os
 import re
 
+# Load environment variables
+load_dotenv()
+
+# Set up OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 # Initialize OpenAI API key
 openai.api_key = st.secrets.api_key
-client = OpenAI(api_key=os.getenv(st.secrets.api_key))
+# client = OpenAI(api_key=os.getenv(st.secrets.api_key))
 
 
 # Step 1: Load and preprocess data
