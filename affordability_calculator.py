@@ -75,7 +75,3 @@ def affordability_calculator():
                 ]
             )
             st.write(response['choices'][0]['message']['content'])
-
-# Load data and run the calculator
-df = load_and_preprocess_data()
-affordability_calculator(df)
