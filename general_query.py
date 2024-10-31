@@ -118,14 +118,14 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
         st.write("Extracted Query:", query)
         st.write("Data Preview:", data.head())  # Only show the head of the data for clarity
 
-        df = data
         # Ensure the query is not empty
         if not query:
             return "Error: No query provided to evaluate."
 
         try:
+            query = query.replace('df', 'data')
             # Execute the query on the provided DataFrame 'data' and get the result
-            result = eval(query, {"df": data})  # Pass 'data' as a variable in the eval context
+            result = eval(query, {"data": data})  # Pass 'data' as a variable in the eval context
             
             # Format the result to make it easier to read based on its type
             if isinstance(result, pd.DataFrame):
