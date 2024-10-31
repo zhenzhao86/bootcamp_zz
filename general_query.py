@@ -151,14 +151,13 @@ def general_query():
 
     # Extract data summary
     data_summary = extract_data_summary(df)
-    st.write("Data Summary:")
-    st.write(data_summary)
 
     user_query = st.text_input("Enter your query about HDB resale trends or prices:")
     user_query = user_query.lower()
     st.write("E.g., What is the average resale price for 5-room flats in 2020?")
     st.write("E.g., What is the average resale price for 3-room flats in bedok in 2020?")
-    st.write("E.g., What price trend from 2020 to 2023?")
+    st.write("E.g., What is the price trend?")
+    st.write("E.g., Which town have most transactions?")
 
     if st.button("Submit"):
         # Directly handle specific queries
@@ -194,21 +193,20 @@ def general_query():
             
             else:
                 # Prepare the prompt for the LLM
-                llm_prompt = (
-                    "You are an assistant for analyzing HDB resale housing data in Singapore. "
-                    "You have access to a pandas DataFrame called 'df' that contains information "
-                    "about HDB resale transactions, including columns for 'month', 'town', 'flat_type', "
-                    "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
-                    "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
-                    "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
-                    "or analyze data as needed to answer the user's queries. "
-                    f"Here is a summary of the data: {data_summary}. "
-    
-                    "When matching user queries, remember to look for substrings instead of exact matches. "
-                    "Use the following format in your response: [QUERY]data.your_pandas_query_here[/QUERY]. "
-                    "For example, to calculate average resale price, use: [QUERY]data['resale_price'].mean()[/QUERY]. "
-                    f"Based on this data, please answer the following query: {user_query}."
-                )
+                llm_prompt = f"""
+                    You are an assistant for analyzing HDB resale housing data in Singapore. 
+                    You have access to a pandas DataFrame called 'df' that contains information about HDB resale transactions over the years. 
+                    The columns in the DataFrame are: {', '.join(df.columns)}
+                    Here is a summary of the data: {data_summary}. 
+                    
+                    Use the following format in your response: [QQ]df.your_pandas_query[/QQ]. 
+                    For example, to calculate average resale price, use: [QQ]df['resale_price'].mean()[/QQ]. 
+                    The 'month' column is a datetime object. Handle it properly. E.g. To filter 2020, use [QQ]df[df['month'].dt.year == 2020][/QQ]
+
+                    DO NOT assign variable names to your query.
+                    Answer the following query from the user: {user_query}.
+                    """
+
 
                 # Pass the prompt to the LLM using the new API interface
                 response = openai.ChatCompletion.create(
@@ -222,7 +220,7 @@ def general_query():
                 llm_response = response['choices'][0]['message']['content']
 
                 # Output the LLM response
-                # final_response = process_ai_response_with_dataframe_queries(llm_response, df)
+                final_response = process_ai_response_with_dataframe_queries(llm_response, df)
 
                 st.write(llm_response)
 
