@@ -120,7 +120,7 @@ def general_query():
                 town_match = re.search(r'(?i)\b(ang mo kio|bedok|bishan|bukit batok|bukit merah|bukit panjang|bukit timah|central area|choa chu kang|clementi|geylang|hougang|jurong east|jurong west|kallang/whampoa|marine parade|pasir ris|punggol|queenstown|sembawang|sengkang|serangoon|tampines|toa payoh|woodlands|yishun)\b', user_query)
 
                 if flat_type_match:
-                    flat_type = flat_type_match.group(0).strip()  # Get the matched flat type
+                    flat_type = flat_type_match.group(0).replace('-', ' ').strip()  # Get the matched flat type
                 if year_match:
                     year = int(year_match.group(1))  # Convert matched year to int
                 if town_match:
