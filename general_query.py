@@ -191,39 +191,40 @@ def general_query():
             elif "price trend" in user_query:
                 # Call the plot function with extracted parameters
                 plot_resale_price_trend(df, flat_type, year, town)
-                
-            # Prepare the prompt for the LLM
-            llm_prompt = (
-                "You are an assistant for analyzing HDB resale housing data in Singapore. "
-                "You have access to a pandas DataFrame called 'df' that contains information "
-                "about HDB resale transactions, including columns for 'month', 'town', 'flat_type', "
-                "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
-                "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
-                "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
-                "or analyze data as needed to answer the user's queries. "
-                f"Here is a summary of the data: {data_summary}. "
-  
-                "When matching user queries, remember to look for substrings instead of exact matches. "
-                "Use the following format in your response: [QUERY]data.your_pandas_query_here[/QUERY]. "
-                "For example, to calculate average resale price, use: [QUERY]data['resale_price'].mean()[/QUERY]. "
-                f"Based on this data, please answer the following query: {user_query}."
-            )
+            
+            else:
+                # Prepare the prompt for the LLM
+                llm_prompt = (
+                    "You are an assistant for analyzing HDB resale housing data in Singapore. "
+                    "You have access to a pandas DataFrame called 'df' that contains information "
+                    "about HDB resale transactions, including columns for 'month', 'town', 'flat_type', "
+                    "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
+                    "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
+                    "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
+                    "or analyze data as needed to answer the user's queries. "
+                    f"Here is a summary of the data: {data_summary}. "
+    
+                    "When matching user queries, remember to look for substrings instead of exact matches. "
+                    "Use the following format in your response: [QUERY]data.your_pandas_query_here[/QUERY]. "
+                    "For example, to calculate average resale price, use: [QUERY]data['resale_price'].mean()[/QUERY]. "
+                    f"Based on this data, please answer the following query: {user_query}."
+                )
 
-            # Pass the prompt to the LLM using the new API interface
-            response = openai.ChatCompletion.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": llm_prompt},
-                    {"role": "user", "content": user_query}
-                ]
-            )
+                # Pass the prompt to the LLM using the new API interface
+                response = openai.ChatCompletion.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": llm_prompt},
+                        {"role": "user", "content": user_query}
+                    ]
+                )
 
-            llm_response = response['choices'][0]['message']['content']
+                llm_response = response['choices'][0]['message']['content']
 
-            # Output the LLM response
-            # final_response = process_ai_response_with_dataframe_queries(llm_response, df)
+                # Output the LLM response
+                # final_response = process_ai_response_with_dataframe_queries(llm_response, df)
 
-            st.write(llm_response)
+                st.write(llm_response)
 
         except Exception as e:
             st.error(f"Error processing the query: {e}")
