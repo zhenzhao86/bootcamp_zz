@@ -16,7 +16,7 @@ def load_and_preprocess_data():
     df['resale_price'] = pd.to_numeric(df['resale_price'], errors='coerce')
     return df
 
-def affordability_calculator(df):
+def affordability_calculator():
     st.title("HDB Resale Housing Affordability Calculator")
     
     # Collect user inputs
