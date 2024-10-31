@@ -38,11 +38,11 @@ def average_resale_price(df, flat_type=None, year=None, town=None, area_range=No
     
     # Apply filters only if the parameters are provided
     if flat_type:
-        filtered_df = filtered_df[filtered_df['flat_type'].str.lower() == flat_type.lower()]
+        filtered_df = filtered_df[filtered_df['flat_type'].str.contains(flat_type, na=False)]
     if year:
         filtered_df = filtered_df[filtered_df['month'].dt.year == year]
     if town:
-        filtered_df = filtered_df[filtered_df['town'].str.lower() == town.lower()]
+        filtered_df = filtered_df[filtered_df['town'].str.contains(town, na=False)]
     if area_range:
         filtered_df = filtered_df[
             (filtered_df['floor_area_sqm'] >= area_range[0]) & 
@@ -108,14 +108,14 @@ def general_query():
     if st.button("Submit"):
         # Directly handle specific queries
         try:
-            if "average resale price" in user_query.lower():
+            if "average resale price" in user_query:
                 # Extract parameters from the user query
                 flat_type = None
                 year = None
                 town = None
                 
                 # Use regex to extract the flat type and year
-                flat_type_match = re.search(r'(\d+-room)', user_query.lower())
+                flat_type_match = re.search(r'(\d+-room)', user_query)
                 year_match = re.search(r'(\d{4})', user_query)
 
                 if flat_type_match:
@@ -124,7 +124,7 @@ def general_query():
                     year = int(year_match.group(1))  # Convert matched year to int
 
                 # Extract town if present and ensure it does not overlap with year
-                if "in" in user_query.lower():
+                if "in" in user_query:
                     town_part = user_query.split("in")[-1].strip()
                     if year is None or str(year) not in town_part:  # Only extract if year is not part of town
                         town = town_part
@@ -136,7 +136,7 @@ def general_query():
                 response = average_resale_price(df, flat_type, year, town)
                 st.write(response)
                 
-            elif "price trend" in user_query.lower():
+            elif "price trend" in user_query:
                 plot_resale_price_trend(df)
                 
             else:
@@ -149,11 +149,10 @@ def general_query():
                     "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
                     "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
                     "or analyze data as needed to answer the user's queries. "
-                    f"Here is the HDB resale data: {df}"
+                    f"Here is the HDB resale data in df: {df}."
                     f"Here is a summary of the data: {data_summary}. "
-                    f"Based on this data, please answer the following query: {user_query}"
-                    "Based on the user query, you should query the df dataframe using python in order to get the results."
-                    "For example, if the user ask 'What is the average resale price for 5-room flats in 2020?', you should filter df to find flat_type of 5 room in year 2020, and answer based on that"
+                    f"Based on this data, please answer the following query: {user_query}."
+                    "When matching user queries, remember to look for substrings instead of exact matches."
                 )
 
                 # Pass the prompt to the LLM
