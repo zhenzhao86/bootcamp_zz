@@ -125,7 +125,7 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
 
         try:
             # Execute the query on the provided DataFrame 'data' and get the result
-            result = eval(query, {"data": df})  # Pass 'data' as a variable in the eval context
+            result = eval(query, {"df": data})  # Pass 'data' as a variable in the eval context
             
             # Format the result to make it easier to read based on its type
             if isinstance(result, pd.DataFrame):
