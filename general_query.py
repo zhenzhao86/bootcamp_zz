@@ -97,7 +97,7 @@ def extract_data_summary(df):
 
 def process_ai_response_with_dataframe_queries(ai_response, data):
     # Loop through the response text as long as there are queries marked by [QQ] and [/QQ]
-    while "[QQ]" in ai_response and "[/QQ]" in ai_response:
+    # while "[QQ]" in ai_response and "[/QQ]" in ai_response:
         
         # Find the start and end positions of the query within the response
         start = ai_response.index("[QQ]") + len("[QQ]")
