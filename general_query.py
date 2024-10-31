@@ -202,9 +202,33 @@ def general_query():
 
             st.write(llm_response)
             # Output the LLM response
-            final_response = process_ai_response_with_dataframe_queries(llm_response, df)
+            # final_response = process_ai_response_with_dataframe_queries(llm_response, df)
 
-            st.write(final_response)
+
+            # Execute any DataFrame queries in the AI's response
+            while "[QUERY]" in ai_response and "[/QUERY]" in ai_response:
+                start = ai_response.index("[QUERY]") + 7
+                end = ai_response.index("[/QUERY]")
+                query = ai_response[start:end]
+                print(query)
+
+                result = query_dataframe(data, query)
+                
+                # Format the result based on its type
+                if isinstance(result, pd.DataFrame):
+                    result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
+                elif isinstance(result, pd.Series):
+                    result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
+                elif isinstance(result, np.ndarray):
+                    result_str = str(result)
+                else:
+                    result_str = str(result)
+                
+                ai_response = ai_response.replace(f"[QUERY]{query}[/QUERY]", result_str)
+
+            return ai_response
+
+            st.write(ai_response)
 
         except Exception as e:
             st.error(f"Error processing the query: {e}")
