@@ -103,7 +103,7 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
         start = ai_response.index("[QQ]") + len("[QQ]")
         end = ai_response.index("[/QQ]")
 
-        # Extract the query text from between [QUERY] and [/QUERY] tags
+        # Extract the query text from between [QQ] and [/QQ] tags
         query = ai_response[start:end].strip()
 
         # Debugging output
@@ -139,40 +139,6 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
 
     return ai_response
 
-
-def process_ai_response_with_dataframe_queries(ai_response, data):
-    while "[QQ]" in ai_response and "[/QQ]" in ai_response:
-        start = ai_response.index("[QQ]") + len("[QQ]")
-        end = ai_response.index("[/QQ]")
-        query = ai_response[start:end].strip()
-
-        # Debugging output
-        st.write("AI Response:", ai_response)
-        st.write("Extracted Query:", query)
-
-        if not query:
-            return "Error: No query provided to evaluate."
-
-        try:
-            result = eval(query, {"df": data})  # Pass 'data' as a variable in the eval context
-            
-            # Format the result to make it easier to read based on its type
-            if isinstance(result, pd.DataFrame):
-                result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
-            elif isinstance(result, pd.Series):
-                result_str = f"\n{result.head(1).to_string()}\n...(showing first row of series)"
-            elif isinstance(result, np.ndarray):
-                result_str = str(result)
-            else:
-                result_str = str(result)
-
-        except Exception as e:
-            return f"Error executing query: {str(e)}"
-
-        ai_response = ai_response.replace(f"[QQ]{query}[/QQ]", result_str)
-
-    return ai_response
-
 def general_query():
     """Handles the user input for general queries on the HDB resale market."""
     st.title("General Query on HDB Resale Market")
@@ -192,8 +158,20 @@ def general_query():
     st.write("E.g., What is the average resale price for 3-room flats in Bedok in 2020?")
     st.write("E.g., What is the price trend from 2020 to 2023?")
 
-    if st.button("Submit"):
-        process_query(df, user_query, data_summary)
+    # Execute only when the submit button is pressed
+    if st.button("Submit") and user_query:
+        # Attempt to process the query up to 5 times if there's an error
+        for i in range(5):
+            response = process_query(data, user_query)
+            if "Error executing query" not in response:
+                break
+
+    # Improved error handling
+    if "Error executing query" in response:
+        st.error("There was an issue processing your query. Please try again with a different question.")
+    else:
+        st.write("Response:")
+        st.write(response)
 
 def process_query(df, user_query, data_summary):
     """Handles querying through the OpenAI model and processes the response."""
