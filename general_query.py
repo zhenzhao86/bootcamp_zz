@@ -113,6 +113,9 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
         
         # Extract the query text from between [QUERY] and [/QUERY] tags
         query = ai_response[start:end]
+        st.write(ai_response)
+        st.write(query)
+        st.write(data)
 
         # Execute the query on the provided DataFrame 'data' and get the result
         result = query_dataframe(data, query)  # Assume 'query_dataframe' is a helper function to run queries
@@ -215,8 +218,10 @@ def general_query():
                 ]
             )
 
+            llm_response = response['choices'][0]['message']['content']
+
             # Output the LLM response
-            final_response = process_ai_response_with_dataframe_queries(response['choices'][0]['message']['content'], df)
+            final_response = process_ai_response_with_dataframe_queries(llm_response, df)
 
             st.write(final_response)
 
@@ -228,7 +233,7 @@ import re
 def query_dataframe(data, query):
     # Allowed environment to restrict eval scope
     allowed_env = {"data": data, "pd": pd, "np": np}
-    
+
     try:
         # Evaluate the query within the restricted environment
         result = eval(query, {"__builtins__": None}, allowed_env)
