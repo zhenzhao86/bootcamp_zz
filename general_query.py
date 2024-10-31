@@ -211,7 +211,19 @@ def general_query():
                 query = llm_response[start:end]
                 print(query)
 
-                result = query_dataframe(df, query)
+                result = ""
+                try:
+                    result = eval(query)
+                    if isinstance(result, pd.DataFrame):
+                        return result
+                    elif isinstance(result, pd.Series):
+                        return result
+                    elif isinstance(result, np.ndarray):
+                        return result
+                    else:
+                        return result
+                except Exception as e:
+                    return f"Error executing query: {str(e)}"
                 
                 # Format the result based on its type
                 if isinstance(result, pd.DataFrame):
@@ -232,18 +244,7 @@ def general_query():
 
 
 def query_dataframe(data, query):
-    try:
-        result = eval(query)
-        if isinstance(result, pd.DataFrame):
-            return result
-        elif isinstance(result, pd.Series):
-            return result
-        elif isinstance(result, np.ndarray):
-            return result
-        else:
-            return result
-    except Exception as e:
-        return f"Error executing query: {str(e)}"
+
 
 # Run the general query function in Streamlit app
 if __name__ == "__main__":
