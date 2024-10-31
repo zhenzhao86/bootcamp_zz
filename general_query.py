@@ -99,43 +99,43 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
     # Loop through the response text as long as there are queries marked by [QQ] and [/QQ]
     # while "[QQ]" in ai_response and "[/QQ]" in ai_response:
         
-        # Find the start and end positions of the query within the response
-        start = ai_response.index("[QQ]") + len("[QQ]")
-        end = ai_response.index("[/QQ]")
+    # Find the start and end positions of the query within the response
+    start = ai_response.index("[QQ]") + len("[QQ]")
+    end = ai_response.index("[/QQ]")
 
-        # Extract the query text from between [QQ] and [/QQ] tags
-        query = ai_response[start:end].strip()
+    # Extract the query text from between [QQ] and [/QQ] tags
+    query = ai_response[start:end].strip()
 
-        # Debugging output
-        st.write("AI Response:", ai_response)
-        st.write("Extracted Query:", query)
+    # Debugging output
+    st.write("AI Response:", ai_response)
+    st.write("Extracted Query:", query)
 
-        # Ensure the query is not empty
-        if not query:
-            return "Error: No query provided to evaluate."
+    # Ensure the query is not empty
+    if not query:
+        return "Error: No query provided to evaluate."
 
-        # Remove any assignment part from the query (if exists)
-        query = query.split('=')[-1].strip()  # Get the right part after '=' if exists
+    # Remove any assignment part from the query (if exists)
+    query = query.split('=')[-1].strip()  # Get the right part after '=' if exists
 
-        try:
-            # Execute the query without assignments
-            result = eval(query, {"df": data})  # Pass 'data' as a variable in the eval context
-            
-            # Format the result to make it easier to read based on its type
-            if isinstance(result, pd.DataFrame):
-                result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
-            elif isinstance(result, pd.Series):
-                result_str = f"\n{result.head(1).to_string()}\n...(showing first row of series)"
-            elif isinstance(result, np.ndarray):
-                result_str = str(result)
-            else:
-                result_str = str(result)
+    try:
+        # Execute the query without assignments
+        result = eval(query, {"df": data})  # Pass 'data' as a variable in the eval context
+        
+        # Format the result to make it easier to read based on its type
+        if isinstance(result, pd.DataFrame):
+            result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
+        elif isinstance(result, pd.Series):
+            result_str = f"\n{result.head(1).to_string()}\n...(showing first row of series)"
+        elif isinstance(result, np.ndarray):
+            result_str = str(result)
+        else:
+            result_str = str(result)
 
-        except Exception as e:
-            return f"Error executing query: {str(e)}"
+    except Exception as e:
+        return f"Error executing query: {str(e)}"
 
-        # Replace the original [QQ]...[/QQ] part with the actual result string
-        ai_response = ai_response.replace(f"[QQ]{query}[/QQ]", result_str)
+    # Replace the original [QQ]...[/QQ] part with the actual result string
+    ai_response = ai_response.replace(f"[QQ]{query}[/QQ]", result_str)
 
     return ai_response
 
