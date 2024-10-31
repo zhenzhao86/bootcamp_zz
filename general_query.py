@@ -7,8 +7,14 @@ import os
 import re
 # from dotenv import load_dotenv
 
-# # Load environment variables
+# Load environment variables from .env file
 # load_dotenv()
+
+# # Access the OpenAI API key
+# openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Initialize the OpenAI client (Optional)
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 
 # Initialize OpenAI API key
@@ -16,7 +22,8 @@ openai.api_key = st.secrets.api_key
 OPENAI_API_KEY= st.secrets.api_key
 # client = OpenAI(api_key=os.getenv(st.secrets.api_key))
 # Set up OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 # Step 1: Load and preprocess data
@@ -176,7 +183,7 @@ def general_query():
             )
 
             # Pass the prompt to the LLM using the new API interface
-            response = client.chat.completions.create(
+            response = openai.ChatCompletion.create(
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": llm_prompt},
