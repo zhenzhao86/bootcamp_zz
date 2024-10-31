@@ -102,7 +102,6 @@ def extract_data_summary(df):
 
 # This function takes a response containing DataFrame queries, executes the queries,
 # and replaces the placeholders in the response with the results.
-
 def process_ai_response_with_dataframe_queries(ai_response, data):
     # Loop through the response text as long as there are queries marked by [QUERY] and [/QUERY]
     while "[QUERY]" in ai_response and "[/QUERY]" in ai_response:
@@ -207,10 +206,6 @@ def general_query():
 
         except Exception as e:
             st.error(f"Error processing the query: {e}")
-
-import re
-
-def query_dataframe(data, query):
 
 
 # Run the general query function in Streamlit app
