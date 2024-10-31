@@ -206,10 +206,10 @@ def general_query():
 
 
             # Execute any DataFrame queries in the AI's response
-            while "[QUERY]" in ai_response and "[/QUERY]" in ai_response:
-                start = ai_response.index("[QUERY]") + 7
-                end = ai_response.index("[/QUERY]")
-                query = ai_response[start:end]
+            while "[QUERY]" in llm_response and "[/QUERY]" in ai_response:
+                start = llm_response.index("[QUERY]") + 7
+                end = llm_response.index("[/QUERY]")
+                query = llm_response[start:end]
                 print(query)
 
                 result = query_dataframe(data, query)
@@ -224,11 +224,9 @@ def general_query():
                 else:
                     result_str = str(result)
                 
-                ai_response = ai_response.replace(f"[QUERY]{query}[/QUERY]", result_str)
+                final_response = llm_response.replace(f"[QUERY]{query}[/QUERY]", result_str)
 
-            return ai_response
-
-            st.write(ai_response)
+            st.write(final_response)
 
         except Exception as e:
             st.error(f"Error processing the query: {e}")
