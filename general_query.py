@@ -171,7 +171,7 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
         except Exception as e:
             return f"Error executing query: {str(e)}"
 
-        ai_response = ai_response.replace(f"[QUERY]{query}[/QUERY]", result_str)
+        ai_response = ai_response.replace(f"[QQ]{query}[/QQ]", result_str)
 
     return ai_response
 
