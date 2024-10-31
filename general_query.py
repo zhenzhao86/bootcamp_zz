@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import glob
 import os
 import re
+import numpy as np  # Added missing import for numpy
 
 # Initialize the OpenAI client (Optional)
 openai.api_key = st.secrets["OPENAI_API_KEY"]
-
 
 # Step 1: Load and preprocess data
 def load_and_preprocess_data():
@@ -200,12 +200,10 @@ def general_query():
                 "or analyze data as needed to answer the user's queries. "
                 f"Here is a summary of the data: {data_summary}. "
   
-                "When matching user queries, remember to look for substrings instead of exact matches.
-                "Use the following format in your response:[QUERY]data.your_pandas_query_here[/QUERY]"
-                "For example, to calculate average resale price, use:[QUERY]data['resale_price'].mean()[/QUERY]
-                
+                "When matching user queries, remember to look for substrings instead of exact matches. "
+                "Use the following format in your response: [QUERY]data.your_pandas_query_here[/QUERY]. "
+                "For example, to calculate average resale price, use: [QUERY]data['resale_price'].mean()[/QUERY]. "
                 f"Based on this data, please answer the following query: {user_query}."
-                "
             )
 
             # Pass the prompt to the LLM using the new API interface
@@ -218,7 +216,7 @@ def general_query():
             )
 
             # Output the LLM response
-            final_response = process_ai_response_with_dataframe_queries(response['choices'][0]['message']['content']), df)
+            final_response = process_ai_response_with_dataframe_queries(response['choices'][0]['message']['content'], df)
 
             st.write(final_response)
 
