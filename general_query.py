@@ -64,8 +64,19 @@ def average_resale_price(df, flat_type=None, year=None, town=None, area_range=No
 
     return f"The average resale price is SGD {avg_price:,.2f}."
 
-def plot_resale_price_trend(df):
-    monthly_trend = df.groupby(df['month'].dt.to_period('M'))['resale_price'].mean()
+def plot_resale_price_trend(df, flat_type=None, year=None, town=None):
+    # Filter the DataFrame based on the parameters provided
+    filtered_df = df.copy()
+    
+    if flat_type:
+        filtered_df = filtered_df[filtered_df['flat_type'].str.lower() == flat_type.lower()]
+    if year:
+        filtered_df = filtered_df[filtered_df['month'].dt.year == year]
+    if town:
+        filtered_df = filtered_df[filtered_df['town'].str.lower() == town.lower()]
+
+    # Group by month and calculate average resale price
+    monthly_trend = filtered_df.groupby(filtered_df['month'].dt.to_period('M'))['resale_price'].mean()
     monthly_trend.index = monthly_trend.index.to_timestamp()
     
     fig, ax = plt.subplots()
@@ -104,6 +115,8 @@ def general_query():
     user_query = st.text_input("Enter your query about HDB resale trends or prices:")
     user_query = user_query.lower()
     st.write("E.g., What is the average resale price for 5-room flats in 2020?")
+    st.write("E.g., What is the average resale price for 3-room flats in bedok in 2020?")
+    st.write("E.g., What price trend from 2020 to 2023?")
 
     if st.button("Submit"):
         # Directly handle specific queries
@@ -115,12 +128,12 @@ def general_query():
                 town = None
                 
                 # Use regex to extract the flat type, year, and town
-                flat_type_match = re.search(r'(\d+\s?[-]?room)', user_query)
+                flat_type_match = re.search(r'(\d+\s?[-]?\s?room)', user_query)
                 year_match = re.search(r'(\d{4})', user_query)
                 town_match = re.search(r'(?i)\b(ang mo kio|bedok|bishan|bukit batok|bukit merah|bukit panjang|bukit timah|central area|choa chu kang|clementi|geylang|hougang|jurong east|jurong west|kallang/whampoa|marine parade|pasir ris|punggol|queenstown|sembawang|sengkang|serangoon|tampines|toa payoh|woodlands|yishun)\b', user_query)
 
                 if flat_type_match:
-                    flat_type = flat_type_match.group(0).replace('-', ' ').strip()  # Get the matched flat type
+                    flat_type = flat_type_match.group(0).replace('-', ' ').strip()  # Replace hyphen with space
                 if year_match:
                     year = int(year_match.group(1))  # Convert matched year to int
                 if town_match:
@@ -134,7 +147,8 @@ def general_query():
                 st.write(response)
                 
             elif "price trend" in user_query:
-                plot_resale_price_trend(df)
+                # Call the plot function with extracted parameters
+                plot_resale_price_trend(df, flat_type, year, town)
                 
             else:
                 # Prepare the prompt for the LLM
