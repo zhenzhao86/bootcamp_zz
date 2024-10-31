@@ -18,8 +18,8 @@ openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 
 # Initialize OpenAI API key
-openai.api_key = st.secrets.api_key
-OPENAI_API_KEY= st.secrets.api_key
+# openai.api_key = st.secrets.api_key
+# OPENAI_API_KEY= st.secrets.api_key
 # client = OpenAI(api_key=os.getenv(st.secrets.api_key))
 # Set up OpenAI client
 
