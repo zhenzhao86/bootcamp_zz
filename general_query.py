@@ -140,6 +140,41 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
     return ai_response
 
 
+def process_ai_response_with_dataframe_queries(ai_response, data):
+    while "[QUERY]" in ai_response and "[/QUERY]" in ai_response:
+        start = ai_response.index("[QUERY]") + len("[QUERY]")
+        end = ai_response.index("[/QUERY]")
+        query = ai_response[start:end].strip()
+
+        # Debugging output
+        st.write("AI Response:", ai_response)
+        st.write("Extracted Query:", query)
+
+        if not query:
+            return "Error: No query provided to evaluate."
+
+        query = query.split('=')[-1].strip()  # Remove any assignment part
+
+        try:
+            result = eval(query, {"df": data})  # Pass 'data' as a variable in the eval context
+            
+            # Format the result to make it easier to read based on its type
+            if isinstance(result, pd.DataFrame):
+                result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
+            elif isinstance(result, pd.Series):
+                result_str = f"\n{result.head(1).to_string()}\n...(showing first row of series)"
+            elif isinstance(result, np.ndarray):
+                result_str = str(result)
+            else:
+                result_str = str(result)
+
+        except Exception as e:
+            return f"Error executing query: {str(e)}"
+
+        ai_response = ai_response.replace(f"[QUERY]{query}[/QUERY]", result_str)
+
+    return ai_response
+
 def general_query():
     """Handles the user input for general queries on the HDB resale market."""
     st.title("General Query on HDB Resale Market")
@@ -158,45 +193,44 @@ def general_query():
     st.write("E.g., What is the price trend from 2020 to 2023?")
 
     if st.button("Submit"):
-        try: 
-            llm_prompt = f"""(
-                You are an assistant for analyzing HDB resale housing data in Singapore. 
-                You have access to a pandas DataFrame called 'df' that contains information about HDB resale transactions over the years. 
-                The columns in the DataFrame are: {', '.join(df.columns)}
-                You can query the DataFrame df using Python pandas syntax to filter, aggregate, or analyze data as needed to answer the user's queries. 
-                Here is a summary of the data: {data_summary}. 
+        process_query(df, user_query, data_summary)
+
+def process_query(df, user_query, data_summary):
+    """Handles querying through the OpenAI model and processes the response."""
+    try: 
+        llm_prompt = f"""(
+            You are an assistant for analyzing HDB resale housing data in Singapore. 
+            You have access to a pandas DataFrame called 'df' that contains information about HDB resale transactions over the years. 
+            The columns in the DataFrame are: {', '.join(df.columns)}
+            You can query the DataFrame df using Python pandas syntax to filter, aggregate, or analyze data as needed to answer the user's queries. 
+            Here is a summary of the data: {data_summary}. 
             
-                
-                Use the following format in your response: [QUERY]df.your_pandas_query[/QUERY]. 
-                For example, to calculate average resale price, use: [QUERY]df['resale_price'].mean()[/QUERY]. 
-                The 'month' column is a datetime object. Handle it properly. E.g. To filter 2020, use df[df['month'].dt.year == 2020
+            Use the following format in your response: [QUERY]df.your_pandas_query[/QUERY]. 
+            For example, to calculate average resale price, use: [QUERY]df['resale_price'].mean()[/QUERY]. 
+            The 'month' column is a datetime object. Handle it properly. E.g. To filter 2020, use df[df['month'].dt.year == 2020]
 
-                DO NOT assign variable names to your query. e.g. don't assign df2020 = query.
-                Use DataFrame queries when needed to provide accurate and specific answers.
-                Use separate [QUERY] blocks if multiple steps are required, explain after every block.
-                Make sure the code within your [QUERY][/QUERY] block can run without error.
-                
-                Answer the following query from the user: {user_query}.
-            )"""
+            DO NOT assign variable names to your query. e.g. don't assign df2020 = query.
+            Use DataFrame queries when needed to provide accurate and specific answers.
+            Use separate [QUERY] blocks if multiple steps are required, explain after every block.
+            Make sure the code within your [QUERY][/QUERY] block can run without error.
+            
+            Answer the following query from the user: {user_query}.
+        )"""
 
-            response = openai.ChatCompletion.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": llm_prompt},
-                    {"role": "user", "content": user_query}
-                ]
-            )
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": llm_prompt},
+                {"role": "user", "content": user_query}
+            ]
+        )
 
-            llm_response = response.choices[0].message.content
-            st.write(llm_response)
+        llm_response = response.choices[0].message.content
+        st.write(llm_response)
 
-            # Execute DataFrame queries in the response (in QUERY blocks)
-            final_response = process_ai_response_with_dataframe_queries(llm_response, df)
-            st.write(final_response)
+        # Execute DataFrame queries in the response (in QUERY blocks)
+        final_response = process_ai_response_with_dataframe_queries(llm_response, df)
+        st.write(final_response)
 
-        except Exception as e:
-            st.error(f"Error processing the query: {e}")
-
-# Run the general query function in Streamlit app
-if __name__ == "__main__":
-    general_query()
+    except Exception as e:
+        st.error(f"Error processing the query: {e}")
