@@ -233,6 +233,10 @@ def query_dataframe(data, query):
         # Evaluate the query within the restricted environment
         result = eval(query, {"__builtins__": None}, allowed_env)
         
+        # Debugging output
+        print(f"Query: {query}")
+        print(f"Result type: {type(result)}")
+        
         # Handle and return different result types
         if isinstance(result, pd.DataFrame):
             return result
@@ -241,7 +245,7 @@ def query_dataframe(data, query):
         elif isinstance(result, np.ndarray):
             return result
         else:
-            return str(result)
+            return str(result)  # Convert to string for other types
     except Exception as e:
         # Provide a clear error message on failure
         return f"Error executing query: {str(e)}"
