@@ -204,9 +204,8 @@ def general_query():
             # Output the LLM response
             # final_response = process_ai_response_with_dataframe_queries(llm_response, df)
 
-
-            # Execute any DataFrame queries in the AI's response
-            while "[QUERY]" in llm_response and "[/QUERY]" in ai_response:
+            # Execute dataframe queries in the response
+            while "[QUERY]" in llm_response and "[/QUERY]" in llm_response:
                 start = llm_response.index("[QUERY]") + 7
                 end = llm_response.index("[/QUERY]")
                 query = llm_response[start:end]
