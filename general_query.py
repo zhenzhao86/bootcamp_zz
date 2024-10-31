@@ -135,15 +135,15 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
             return f"Error executing query: {str(e)}"
 
         # Replace the original [QUERY]...[/QUERY] part with the actual result string
-        ai_response = ai_response.replace(f"[QUERY]{query}[/QUERY]", result_str)
+        ai_response = ai_response.replace(f"[QQ]{query}[/QQ]", result_str)
 
     return ai_response
 
 
 def process_ai_response_with_dataframe_queries(ai_response, data):
-    while "[QUERY]" in ai_response and "[/QUERY]" in ai_response:
-        start = ai_response.index("[QUERY]") + len("[QUERY]")
-        end = ai_response.index("[/QUERY]")
+    while "[QUERY]" in ai_response and "[/QQ]" in ai_response:
+        start = ai_response.index("[QQ]") + len("[QQ]")
+        end = ai_response.index("[/QQ]")
         query = ai_response[start:end].strip()
 
         # Debugging output
@@ -188,7 +188,9 @@ def general_query():
     data_summary = extract_data_summary(df)
     user_query = st.text_input("Enter your query about HDB resale trends or prices:")
     user_query = user_query.lower()
-    st.write("E.g., What is the average resale price for 5-room flats in 2020?")
+    st.write("E.g., How many unique towns are there?")
+    st.write("E.g., Which town has most transaction?")
+    st.write("E.g., How is the average resale price in 2020?")
     st.write("E.g., What is the average resale price for 3-room flats in Bedok in 2020?")
     st.write("E.g., What is the price trend from 2020 to 2023?")
 
@@ -205,14 +207,14 @@ def process_query(df, user_query, data_summary):
             You can query the DataFrame df using Python pandas syntax to filter, aggregate, or analyze data as needed to answer the user's queries. 
             Here is a summary of the data: {data_summary}. 
             
-            Use the following format in your response: [QUERY]df.your_pandas_query[/QUERY]. 
-            For example, to calculate average resale price, use: [QUERY]df['resale_price'].mean()[/QUERY]. 
-            The 'month' column is a datetime object. Handle it properly. E.g. To filter 2020, use df[df['month'].dt.year == 2020]
+            Use the following format in your response: [QQ]df.your_pandas_query[/QQ]. 
+            For example, to calculate average resale price, use: [QQ]df['resale_price'].mean()[/QQ]. 
+            The 'month' column is a datetime object. Handle it properly. E.g. To filter 2020, use [QQ]df[df['month'].dt.year == 2020][/QQ]
 
             DO NOT assign variable names to your query. e.g. don't assign df2020 = query.
             Use DataFrame queries when needed to provide accurate and specific answers.
-            Use separate [QUERY] blocks if multiple steps are required, explain after every block.
-            Make sure the code within your [QUERY][/QUERY] block can run without error.
+            Use separate [QQ] blocks if multiple steps are required, explain after every block.
+            Make sure the code within your [QQ][/QQ] block can run without error.
             
             Answer the following query from the user: {user_query}.
         )"""
