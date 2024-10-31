@@ -96,12 +96,12 @@ def extract_data_summary(df):
     return summary
 
 def process_ai_response_with_dataframe_queries(ai_response, data):
-    # Loop through the response text as long as there are queries marked by [QUERY] and [/QUERY]
-    while "[QUERY]" in ai_response and "[/QUERY]" in ai_response:
+    # Loop through the response text as long as there are queries marked by [QQ] and [/QQ]
+    while "[QQ]" in ai_response and "[/QQ]" in ai_response:
         
         # Find the start and end positions of the query within the response
-        start = ai_response.index("[QUERY]") + len("[QUERY]")
-        end = ai_response.index("[/QUERY]")
+        start = ai_response.index("[QQ]") + len("[QQ]")
+        end = ai_response.index("[/QQ]")
 
         # Extract the query text from between [QUERY] and [/QUERY] tags
         query = ai_response[start:end].strip()
@@ -134,14 +134,14 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
         except Exception as e:
             return f"Error executing query: {str(e)}"
 
-        # Replace the original [QUERY]...[/QUERY] part with the actual result string
+        # Replace the original [QQ]...[/QQ] part with the actual result string
         ai_response = ai_response.replace(f"[QQ]{query}[/QQ]", result_str)
 
     return ai_response
 
 
 def process_ai_response_with_dataframe_queries(ai_response, data):
-    while "[QUERY]" in ai_response and "[/QQ]" in ai_response:
+    while "[QQ]" in ai_response and "[/QQ]" in ai_response:
         start = ai_response.index("[QQ]") + len("[QQ]")
         end = ai_response.index("[/QQ]")
         query = ai_response[start:end].strip()
@@ -152,8 +152,6 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
 
         if not query:
             return "Error: No query provided to evaluate."
-
-        query = query.split('=')[-1].strip()  # Remove any assignment part
 
         try:
             result = eval(query, {"df": data})  # Pass 'data' as a variable in the eval context
@@ -230,7 +228,7 @@ def process_query(df, user_query, data_summary):
         llm_response = response.choices[0].message.content
         st.write(llm_response)
 
-        # Execute DataFrame queries in the response (in QUERY blocks)
+        # Execute DataFrame queries in the response (in blocks)
         final_response = process_ai_response_with_dataframe_queries(llm_response, df)
         st.write(final_response)
 
