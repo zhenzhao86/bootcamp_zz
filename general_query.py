@@ -150,31 +150,32 @@ def general_query():
                 # Call the plot function with extracted parameters
                 plot_resale_price_trend(df, flat_type, year, town)
                 
-            else:
-                # Prepare the prompt for the LLM
-                llm_prompt = (
-                    "You are an assistant for analyzing HDB resale housing data in Singapore. "
-                    "You have access to a pandas DataFrame called 'df' that contains information "
-                    "about HDB resale transactions, including columns for 'month', 'town', 'flat_type', "
-                    "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
-                    "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
-                    "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
-                    "or analyze data as needed to answer the user's queries. "
-                    f"Here is the HDB resale data in df: {df}."
-                    f"Here is a summary of the data: {data_summary}. "
-                    f"Based on this data, please answer the following query: {user_query}."
-                    "When matching user queries, remember to look for substrings instead of exact matches."
-                )
+            # Prepare the prompt for the LLM
+            llm_prompt = (
+                "You are an assistant for analyzing HDB resale housing data in Singapore. "
+                "You have access to a pandas DataFrame called 'df' that contains information "
+                "about HDB resale transactions, including columns for 'month', 'town', 'flat_type', "
+                "'block', 'street_name', 'storey_range', 'floor_area_sqm', 'flat_model', "
+                "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
+                "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
+                "or analyze data as needed to answer the user's queries. "
+                f"Here is the HDB resale data in df: {df}."
+                f"Here is a summary of the data: {data_summary}. "
+                f"Based on this data, please answer the following query: {user_query}."
+                "When matching user queries, remember to look for substrings instead of exact matches."
+            )
 
-                # Pass the prompt to the LLM
-                response = openai.ChatCompletion.create(
-                    model="gpt-4",
-                    messages=[{"role": "system", "content": llm_prompt},
-                              {"role": "user", "content": user_query}]
-                )
+            # Pass the prompt to the LLM using the new API interface
+            response = openai.Chat.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": llm_prompt},
+                    {"role": "user", "content": user_query}
+                ]
+            )
 
-                # Output the LLM response
-                st.write(response['choices'][0]['message']['content'])
+            # Output the LLM response
+            st.write(response['choices'][0]['message']['content'])
 
         except Exception as e:
             st.error(f"Error processing the query: {e}")
