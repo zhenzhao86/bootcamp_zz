@@ -173,7 +173,7 @@ def general_query():
             # Prepare the prompt for the LLM
             llm_prompt = f"""(
                 You are an assistant for analyzing HDB resale housing data in Singapore. 
-                You have access to a pandas DataFrame called 'df' that contains information about HDB resale transactions. The columns in the DataFrame are: {', '.join(data.columns)}
+                You have access to a pandas DataFrame called 'df' that contains information about HDB resale transactions. The columns in the DataFrame are: {', '.join(df.columns)}
                 You can query the DataFrame using Python pandas syntax to filter, aggregate, or analyze data as needed to answer the user's queries. 
                 Here is a summary of the dat: {data_summary}. 
   
