@@ -158,23 +158,26 @@ def general_query():
     st.write("E.g., What is the average resale price for 3-room flats in Bedok in 2020?")
     st.write("E.g., What is the price trend from 2020 to 2023?")
 
-  submit_button = st.button("Submit")
+    submit_button = st.button("Submit")
+
+    response = None  # Initialize response to avoid UnboundLocalError
 
     # Execute only when the submit button is pressed
     if submit_button and user_query:
         # Attempt to process the query
-        response = None
         for i in range(5):
             response = process_query(df, user_query, data_summary)
             if "Error executing query" not in response:
                 break
 
-        # Improved error handling
+    # Display results if response is defined and contains no error
+    if response:
         if "Error executing query" in response:
             st.error("There was an issue processing your query. Please try again with a different question.")
         else:
             st.write("Response:")
             st.write(response)
+
 
 
 def process_query(df, user_query, data_summary):
