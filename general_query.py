@@ -149,9 +149,11 @@ def general_query():
                     "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
                     "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
                     "or analyze data as needed to answer the user's queries. "
-                    f"Here is the HDB resale data:\n{df}\n "
+                    f"Here is the HDB resale data: {df}"
                     f"Here is a summary of the data: {data_summary}. "
                     f"Based on this data, please answer the following query: {user_query}"
+                    "Based on the user query, you should query the df dataframe using python in order to get the results."
+                    "For example, if the user ask 'What is the average resale price for 5-room flats in 2020?', you should filter df to find flat_type of 5 room in year 2020, and answer based on that"
                 )
 
                 # Pass the prompt to the LLM
