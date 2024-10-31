@@ -4,10 +4,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import glob
 import os
-import re
 import numpy as np  # Added missing import for numpy
 
-# Initialize the OpenAI client (Optional)
+# Initialize the OpenAI client
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # Step 1: Load and preprocess data
@@ -17,29 +16,23 @@ def load_and_preprocess_data():
     df = pd.concat(df_list, ignore_index=True)
 
     # Convert all string columns to lowercase
-    df.columns = df.columns.str.lower()  # Change column names to lowercase
+    df.columns = df.columns.str.lower()
     df['month'] = pd.to_datetime(df['month'], format='%Y-%m')
     df['resale_price'] = pd.to_numeric(df['resale_price'], errors='coerce')
     df['floor_area_sqm'] = pd.to_numeric(df['floor_area_sqm'], errors='coerce')
     df['remaining_lease_years'] = df['remaining_lease'].str.extract(r'(\d+)').astype(float)
     df['lease_commence_date'] = pd.to_datetime(df['lease_commence_date'], format='%Y').dt.year
 
-    # Convert string values in relevant columns to lowercase
-    df['town'] = df['town'].str.lower()
-    df['flat_type'] = df['flat_type'].str.lower()
-    df['block'] = df['block'].str.lower()
-    df['street_name'] = df['street_name'].str.lower()
-    df['flat_model'] = df['flat_model'].str.lower()
+    # Convert relevant string columns to lowercase
+    for col in ['town', 'flat_type', 'block', 'street_name', 'flat_model']:
+        df[col] = df[col].str.lower()
 
     return df
 
 # Step 2: Define functions to handle specific queries
 def average_resale_price(df, flat_type=None, year=None, town=None, area_range=None):
     filtered_df = df.copy()
-
-    # Convert relevant columns to strings and fill NaNs to avoid errors
-    filtered_df['flat_type'] = filtered_df['flat_type'].fillna('').astype(str)
-    filtered_df['town'] = filtered_df['town'].fillna('').astype(str)
+    filtered_df.fillna('', inplace=True)
 
     # Apply filters only if the parameters are provided
     if flat_type:
@@ -63,10 +56,7 @@ def average_resale_price(df, flat_type=None, year=None, town=None, area_range=No
 
 def plot_resale_price_trend(df, flat_type=None, year=None, town=None):
     filtered_df = df.copy()
-
-    # Convert relevant columns to strings and fill NaNs to avoid errors
-    filtered_df['flat_type'] = filtered_df['flat_type'].fillna('').astype(str)
-    filtered_df['town'] = filtered_df['town'].fillna('').astype(str)
+    filtered_df.fillna('', inplace=True)
 
     if flat_type:
         filtered_df = filtered_df[filtered_df['flat_type'].str.lower() == flat_type.lower()]
@@ -98,45 +88,32 @@ def extract_data_summary(df):
     }
     return summary
 
-# This function takes a response containing DataFrame queries, executes the queries,
-# and replaces the placeholders in the response with the results.
 def process_ai_response_with_dataframe_queries(ai_response, data):
-    # Loop through the response text as long as there are queries marked by [QUERY] and [/QUERY]
+    """Processes the AI response and executes DataFrame queries."""
     while "[QUERY]" in ai_response and "[/QUERY]" in ai_response:
-        
-        # Find the start and end positions of the query within the response
         start = ai_response.index("[QUERY]") + len("[QUERY]")
         end = ai_response.index("[/QUERY]")
-        
-        # Extract the query text from between [QUERY] and [/QUERY] tags
-        query = ai_response[start:end].strip()  # Clean up any leading/trailing whitespace
+        query = ai_response[start:end].strip()
 
         # Debugging output
         st.write("AI Response:", ai_response)
         st.write("Extracted Query:", query)
-        st.write("Data Preview:", data.head())  # Only show the head of the data for clarity
 
-        # Ensure the query is not empty
         if not query:
             return "Error: No query provided to evaluate."
 
         try:
             query = query.replace('df', 'data')
-            # Execute the query on the provided DataFrame 'data' and get the result
             result = eval(query, {"data": data})  # Pass 'data' as a variable in the eval context
             
-            # Format the result to make it easier to read based on its type
+            # Format the result based on its type
             if isinstance(result, pd.DataFrame):
-                # If the result is a DataFrame, show just the first row to keep it brief
                 result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
             elif isinstance(result, pd.Series):
-                # If it's a Series (a single column), also show the first row
                 result_str = f"\n{result.head(1).to_string()}\n...(showing first row of series)"
             elif isinstance(result, np.ndarray):
-                # If the result is an array (e.g., from calculations), convert it to a string
                 result_str = str(result)
             else:
-                # For any other type (like a single value), just convert it to a string
                 result_str = str(result)
 
         except Exception as e:
@@ -144,11 +121,11 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
 
         # Replace the original [QUERY]...[/QUERY] part with the actual result string
         ai_response = ai_response.replace(f"[QUERY]{query}[/QUERY]", result_str)
-    
-    # Return the modified response with all queries replaced by their results
+
     return ai_response
 
 def general_query():
+    """Handles the user input for general queries on the HDB resale market."""
     st.title("General Query on HDB Resale Market")
     
     # Load and preprocess the data
@@ -164,32 +141,29 @@ def general_query():
     user_query = st.text_input("Enter your query about HDB resale trends or prices:")
     user_query = user_query.lower()
     st.write("E.g., What is the average resale price for 5-room flats in 2020?")
-    st.write("E.g., What is the average resale price for 3-room flats in bedok in 2020?")
-    st.write("E.g., What price trend from 2020 to 2023?")
+    st.write("E.g., What is the average resale price for 3-room flats in Bedok in 2020?")
+    st.write("E.g., What is the price trend from 2020 to 2023?")
 
     if st.button("Submit"):
-        # Directly handle specific queries
         try: 
-            # Prepare the prompt for the LLM
             llm_prompt = f"""(
                 You are an assistant for analyzing HDB resale housing data in Singapore. 
-                You have access to a pandas DataFrame called 'df' that contains information about HDB resale transactions. The columns in the DataFrame are: {', '.join(df.columns)}
-                You can query the DataFrame using Python pandas syntax to filter, aggregate, or analyze data as needed to answer the user's queries. 
-                Here is a summary of the dat: {data_summary}. 
-  
+                You have access to a pandas DataFrame called 'df' that contains information about HDB resale transactions over the years. 
+                The columns in the DataFrame are: {', '.join(df.columns)}
+                You can query the DataFrame df using Python pandas syntax to filter, aggregate, or analyze data as needed to answer the user's queries. 
+                Here is a summary of the data: {data_summary}. 
+
                 When matching user queries, remember to look for substrings instead of exact matches. 
                 Use the following format in your response: [QUERY]data.your_pandas_query_here[/QUERY]. 
                 For example, to calculate average resale price, use: [QUERY]data['resale_price'].mean()[/QUERY]. 
 
-                Do not assign varaible name to your query. e.g. dont assign data_2020 = query
+                Do not assign variable names to your query. e.g. don't assign data_2020 = query.
                 Use DataFrame queries when needed to provide accurate and specific answers.
-                Use separate [QUERY] blocks if mutliple steps are required and explain step by step.
+                Use separate [QUERY] blocks if multiple steps are required and explain step by step.
 
-                "Based on this data,  answer the following query from user: {user_query}."
-            )
-            """
+                Based on this data, answer the following query from the user: {user_query}.
+            )"""
 
-            # Pass the prompt to the LLM using the new API interface
             response = openai.ChatCompletion.create(
                 model="gpt-4o-mini",
                 messages=[
@@ -199,52 +173,14 @@ def general_query():
             )
 
             llm_response = response['choices'][0]['message']['content']
-
             st.write(llm_response)
-            # Output the LLM response
-            # final_response = process_ai_response_with_dataframe_queries(llm_response, df)
 
-            # Execute dataframe queries in the response
-            while "[QUERY]" in llm_response and "[/QUERY]" in llm_response:
-                start = llm_response.index("[QUERY]") + 7
-                end = llm_response.index("[/QUERY]")
-                query = llm_response[start:end]
-                print(query)
-
-                result = ""
-                try:
-                    result = eval(query)
-                    if isinstance(result, pd.DataFrame):
-                        return result
-                    elif isinstance(result, pd.Series):
-                        return result
-                    elif isinstance(result, np.ndarray):
-                        return result
-                    else:
-                        return result
-                except Exception as e:
-                    return f"Error executing query: {str(e)}"
-                
-                # Format the result based on its type
-                if isinstance(result, pd.DataFrame):
-                    result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
-                elif isinstance(result, pd.Series):
-                    result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
-                elif isinstance(result, np.ndarray):
-                    result_str = str(result)
-                else:
-                    result_str = str(result)
-                
-                final_response = llm_response.replace(f"[QUERY]{query}[/QUERY]", result_str)
-
+            # Execute DataFrame queries in the response (in QUERY blocks)
+            final_response = process_ai_response_with_dataframe_queries(llm_response, df)
             st.write(final_response)
 
         except Exception as e:
             st.error(f"Error processing the query: {e}")
-
-
-def query_dataframe(data, query):
-
 
 # Run the general query function in Streamlit app
 if __name__ == "__main__":
