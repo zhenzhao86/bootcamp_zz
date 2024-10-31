@@ -96,7 +96,9 @@ def extract_data_summary(df):
     return summary
 
 def process_ai_response_with_dataframe_queries(ai_response, data):
+    # Loop through the response text as long as there are queries marked by [QUERY] and [/QUERY]
     while "[QUERY]" in ai_response and "[/QUERY]" in ai_response:
+        
         # Find the start and end positions of the query within the response
         start = ai_response.index("[QUERY]") + len("[QUERY]")
         end = ai_response.index("[/QUERY]")
@@ -112,17 +114,12 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
         if not query:
             return "Error: No query provided to evaluate."
 
-        # Fix common query structure issues
-        query = re.sub(r'(\w+)\.str\.contains\(([^)]+)\)', r'(\1.str.contains(\2))', query)  # Correct str.contains usage
-        query = query.replace('==', '==').replace('!=', '!=')  # Ensure comparisons are correct
-        
-        # Enclose conditions in parentheses for logical operations
-        query = re.sub(r'(\[)(.*?)(\])', r'(\2)', query)  # Fix unmatched brackets
+        # Remove any assignment part from the query (if exists)
+        query = query.split('=')[-1].strip()  # Get the right part after '=' if exists
 
         try:
-            # Replace 'df' with 'data' for compatibility
-            query = query.replace('df', 'data')
-            result = eval(query, {"data": data})  # Pass 'data' as a variable in the eval context
+            # Execute the query without assignments
+            result = eval(query, {"df": data})  # Pass 'data' as a variable in the eval context
             
             # Format the result to make it easier to read based on its type
             if isinstance(result, pd.DataFrame):
