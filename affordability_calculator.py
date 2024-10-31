@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import openai
+import glob  # Import glob to locate CSV files
+import os
+
 
 def load_and_preprocess_data():
     # Load all CSV files in the data folder (same as in general_query)
