@@ -10,7 +10,6 @@ import numpy as np  # For handling numerical operations
 # Initialize the OpenAI client
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-# Step 1: Load and preprocess data
 def load_and_preprocess_data():
     all_files = glob.glob(os.path.join("data", "*.csv"))
     df_list = [pd.read_csv(file) for file in all_files]
@@ -32,6 +31,20 @@ def load_and_preprocess_data():
     df['town'] = df['town'].astype(str)
 
     return df
+
+
+def extract_data_summary(df):
+summary = {
+    "Total Records": df.shape[0],
+    "Unique Towns": df['town'].nunique(),
+    "Unique Flat Types": df['flat_type'].nunique(),
+    "Average Resale Price": df['resale_price'].mean(),
+    "Average Floor Area (sqm)": df['floor_area_sqm'].mean(),
+    "Latest Record Date": df['month'].max().date(),
+    "Earliest Record Date": df['month'].min().date(),
+}
+return summary
+
 
 
 # Function to process OpenAI's response with queries within [QQ] blocks
