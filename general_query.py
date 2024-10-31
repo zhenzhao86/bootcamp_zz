@@ -95,24 +95,35 @@ def extract_data_summary(df):
     return summary
 
 def process_ai_response_with_dataframe_queries(ai_response, data):
-    """Processes the AI response and executes DataFrame queries."""
     while "[QUERY]" in ai_response and "[/QUERY]" in ai_response:
+        # Find the start and end positions of the query within the response
         start = ai_response.index("[QUERY]") + len("[QUERY]")
         end = ai_response.index("[/QUERY]")
+
+        # Extract the query text from between [QUERY] and [/QUERY] tags
         query = ai_response[start:end].strip()
 
         # Debugging output
         st.write("AI Response:", ai_response)
         st.write("Extracted Query:", query)
 
+        # Ensure the query is not empty
         if not query:
             return "Error: No query provided to evaluate."
 
+        # Fix common query structure issues
+        query = re.sub(r'(\w+)\.str\.contains\(([^)]+)\)', r'(\1.str.contains(\2))', query)  # Correct str.contains usage
+        query = query.replace('==', '==').replace('!=', '!=')  # Ensure comparisons are correct
+        
+        # Enclose conditions in parentheses for logical operations
+        query = re.sub(r'(\[)(.*?)(\])', r'(\2)', query)  # Fix unmatched brackets
+
         try:
+            # Replace 'df' with 'data' for compatibility
             query = query.replace('df', 'data')
             result = eval(query, {"data": data})  # Pass 'data' as a variable in the eval context
             
-            # Format the result based on its type
+            # Format the result to make it easier to read based on its type
             if isinstance(result, pd.DataFrame):
                 result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
             elif isinstance(result, pd.Series):
@@ -129,6 +140,7 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
         ai_response = ai_response.replace(f"[QUERY]{query}[/QUERY]", result_str)
 
     return ai_response
+
 
 def general_query():
     """Handles the user input for general queries on the HDB resale market."""
