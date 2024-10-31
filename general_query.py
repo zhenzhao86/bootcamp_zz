@@ -112,34 +112,43 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
         end = ai_response.index("[/QUERY]")
         
         # Extract the query text from between [QUERY] and [/QUERY] tags
-        query = ai_response[start:end]
-        st.write(ai_response)
-        st.write(query)
-        st.write(data)
+        query = ai_response[start:end].strip()  # Clean up any leading/trailing whitespace
 
-        # Execute the query on the provided DataFrame 'data' and get the result
-        result = query_dataframe(data, query)  # Assume 'query_dataframe' is a helper function to run queries
-        
-        # Format the result to make it easier to read based on its type
-        if isinstance(result, pd.DataFrame):
-            # If the result is a DataFrame, show just the first row to keep it brief
-            result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
-        elif isinstance(result, pd.Series):
-            # If it's a Series (a single column), also show the first row
-            result_str = f"\n{result.head(1).to_string()}\n...(showing first row of series)"
-        elif isinstance(result, np.ndarray):
-            # If the result is an array (e.g., from calculations), convert it to a string
-            result_str = str(result)
-        else:
-            # For any other type (like a single value), just convert it to a string
-            result_str = str(result)
-        
+        # Debugging output
+        st.write("AI Response:", ai_response)
+        st.write("Extracted Query:", query)
+        st.write("Data Preview:", data.head())  # Only show the head of the data for clarity
+
+        # Ensure the query is not empty
+        if not query:
+            return "Error: No query provided to evaluate."
+
+        try:
+            # Execute the query on the provided DataFrame 'data' and get the result
+            result = eval(query, {"data": data})  # Pass 'data' as a variable in the eval context
+            
+            # Format the result to make it easier to read based on its type
+            if isinstance(result, pd.DataFrame):
+                # If the result is a DataFrame, show just the first row to keep it brief
+                result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
+            elif isinstance(result, pd.Series):
+                # If it's a Series (a single column), also show the first row
+                result_str = f"\n{result.head(1).to_string()}\n...(showing first row of series)"
+            elif isinstance(result, np.ndarray):
+                # If the result is an array (e.g., from calculations), convert it to a string
+                result_str = str(result)
+            else:
+                # For any other type (like a single value), just convert it to a string
+                result_str = str(result)
+
+        except Exception as e:
+            return f"Error executing query: {str(e)}"
+
         # Replace the original [QUERY]...[/QUERY] part with the actual result string
         ai_response = ai_response.replace(f"[QUERY]{query}[/QUERY]", result_str)
     
     # Return the modified response with all queries replaced by their results
     return ai_response
-
 
 def general_query():
     st.title("General Query on HDB Resale Market")
@@ -162,36 +171,7 @@ def general_query():
 
     if st.button("Submit"):
         # Directly handle specific queries
-        try:
-            # Extract parameters from the user query
-            flat_type = None
-            year = None
-            town = None
-
-            if "average resale price" in user_query:
-                # Use regex to extract the flat type, year, and town
-                flat_type_match = re.search(r'(\d+\s?[-]?\s?room)', user_query)
-                year_match = re.search(r'(\d{4})', user_query)
-                town_match = re.search(r'(?i)\b(ang mo kio|bedok|bishan|bukit batok|bukit merah|bukit panjang|bukit timah|central area|choa chu kang|clementi|geylang|hougang|jurong east|jurong west|kallang/whampoa|marine parade|pasir ris|punggol|queenstown|sembawang|sengkang|serangoon|tampines|toa payoh|woodlands|yishun)\b', user_query)
-
-                if flat_type_match:
-                    flat_type = flat_type_match.group(0).replace('-', ' ').strip()  # Replace hyphen with space
-                if year_match:
-                    year = int(year_match.group(1))  # Convert matched year to int
-                if town_match:
-                    town = town_match.group(0).strip()  # Get the matched town
-
-                # Debugging output
-                st.write(f"Extracted flat type: {flat_type}, year: {year}, town: {town}")
-
-                # Fetch the average resale price based on extracted parameters
-                response = average_resale_price(df, flat_type, year, town)
-                st.write(response)
-                
-            elif "price trend" in user_query:
-                # Call the plot function with extracted parameters
-                plot_resale_price_trend(df, flat_type, year, town)
-                
+        try: 
             # Prepare the prompt for the LLM
             llm_prompt = (
                 "You are an assistant for analyzing HDB resale housing data in Singapore. "
@@ -201,7 +181,7 @@ def general_query():
                 "'lease_commence_date', 'remaining_lease_years', and 'resale_price'. "
                 "You can query the DataFrame using Python pandas syntax to filter, aggregate, "
                 "or analyze data as needed to answer the user's queries. "
-                f"Here is a summary of the data: {data_summary}. "
+                f"Here is a summary of the data, and the columns you have access to: {data_summary}. "
   
                 "When matching user queries, remember to look for substrings instead of exact matches. "
                 "Use the following format in your response: [QUERY]data.your_pandas_query_here[/QUERY]. "
@@ -231,22 +211,7 @@ def general_query():
 import re
 
 def query_dataframe(data, query):
-    try:
-        # Ensure query is not None or empty before evaluating
-        if query is None or query.strip() == "":
-            return "Error: No query provided to evaluate."
-        
-        result = eval(query)
-        if isinstance(result, pd.DataFrame):
-            return result
-        elif isinstance(result, pd.Series):
-            return result
-        elif isinstance(result, np.ndarray):
-            return result
-        else:
-            return result
-    except Exception as e:
-        return f"Error executing query: {str(e)}"
+
 
 # Run the general query function in Streamlit app
 if __name__ == "__main__":
