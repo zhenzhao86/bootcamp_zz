@@ -17,190 +17,68 @@ def load_and_preprocess_data():
     df = pd.concat(df_list, ignore_index=True)
 
     # Convert all string columns to lowercase
-    df.columns = df.columns.str.lower()  # Change column names to lowercase
+    df.columns = df.columns.str.lower()
     df['month'] = pd.to_datetime(df['month'], format='%Y-%m')
     df['resale_price'] = pd.to_numeric(df['resale_price'], errors='coerce')
     df['floor_area_sqm'] = pd.to_numeric(df['floor_area_sqm'], errors='coerce')
     df['remaining_lease_years'] = df['remaining_lease'].str.extract(r'(\d+)').astype(float)
     df['lease_commence_date'] = pd.to_datetime(df['lease_commence_date'], format='%Y').dt.year
 
-    # Convert string values in relevant columns to lowercase and handle NaNs
     string_columns = ['town', 'flat_type', 'block', 'street_name', 'flat_model']
     for column in string_columns:
-        df[column] = df[column].fillna('').str.lower()  # Fill NaNs and convert to lowercase
+        df[column] = df[column].fillna('').str.lower()
 
-    # Ensure that the DataFrame has proper string types
     df['flat_type'] = df['flat_type'].astype(str)
     df['town'] = df['town'].astype(str)
 
     return df
 
 
-# Step 2: Define functions to handle specific queries
-def average_resale_price(df, flat_type=None, year=None, town=None, area_range=None):
-    filtered_df = df.copy()
-    filtered_df.fillna('', inplace=True)
-
-    # Apply filters only if the parameters are provided
-    if flat_type:
-        filtered_df = filtered_df[filtered_df['flat_type'].str.contains(flat_type, na=False)]
-    if year:
-        filtered_df = filtered_df[filtered_df['month'].dt.year == year]
-    if town:
-        filtered_df = filtered_df[filtered_df['town'].str.contains(town, na=False)]
-    if area_range:
-        filtered_df = filtered_df[
-            (filtered_df['floor_area_sqm'] >= area_range[0]) & 
-            (filtered_df['floor_area_sqm'] <= area_range[1])
-        ]
-
-    if filtered_df.empty:
-        return "No records found matching the criteria."
-
-    avg_price = filtered_df['resale_price'].mean()
-    return f"The average resale price is SGD {avg_price:,.2f}."
-
-
-def plot_resale_price_trend(df, flat_type=None, year=None, town=None):
-    filtered_df = df.copy()
-    filtered_df.fillna('', inplace=True)
-
-    if flat_type:
-        filtered_df = filtered_df[filtered_df['flat_type'].str.lower() == flat_type.lower()]
-    if year:
-        filtered_df = filtered_df[filtered_df['month'].dt.year == year]
-    if town:
-        filtered_df = filtered_df[filtered_df['town'].str.lower() == town.lower()]
-
-    monthly_trend = filtered_df.groupby(filtered_df['month'].dt.to_period('M'))['resale_price'].mean()
-    monthly_trend.index = monthly_trend.index.to_timestamp()
-    
-    fig, ax = plt.subplots()
-    monthly_trend.plot(ax=ax, color='blue', title="Average Resale Price Trend Over Time")
-    ax.set_xlabel("Month")
-    ax.set_ylabel("Average Resale Price (SGD)")
-    
-    st.pyplot(fig)
-
-def extract_data_summary(df):
-    """Extracts a summary of the DataFrame for context."""
-    summary = {
-        "Total Records": df.shape[0],
-        "Unique Towns": df['town'].nunique(),
-        "Unique Flat Types": df['flat_type'].nunique(),
-        "Average Resale Price": df['resale_price'].mean(),
-        "Average Floor Area (sqm)": df['floor_area_sqm'].mean(),
-        "Latest Record Date": df['month'].max().date(),
-        "Earliest Record Date": df['month'].min().date(),
-    }
-    return summary
-
+# Function to process OpenAI's response with queries within [QQ] blocks
 def process_ai_response_with_dataframe_queries(ai_response, data):
-    # Loop through the response text as long as there are queries marked by [QQ] and [/QQ]
-    # while "[QQ]" in ai_response and "[/QQ]" in ai_response:
-        
-    # Find the start and end positions of the query within the response
-    start = ai_response.index("[QQ]") + len("[QQ]")
-    end = ai_response.index("[/QQ]")
+    while "[QQ]" in ai_response and "[/QQ]" in ai_response:
+        start = ai_response.index("[QQ]") + len("[QQ]")
+        end = ai_response.index("[/QQ]")
+        query = ai_response[start:end].strip()
 
-    # Extract the query text from between [QQ] and [/QQ] tags
-    query = ai_response[start:end].strip()
+        if not query:
+            return "Error: No query provided to evaluate."
 
-    # Debugging output
-    st.write("AI Response:", ai_response)
-    st.write("Extracted Query:", query)
+        query = query.split('=')[-1].strip()
 
-    # Ensure the query is not empty
-    if not query:
-        return "Error: No query provided to evaluate."
+        try:
+            result = eval(query, {"df": data})
+            if isinstance(result, pd.DataFrame):
+                result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
+            elif isinstance(result, pd.Series):
+                result_str = f"\n{result.head(1).to_string()}\n...(showing first row of series)"
+            elif isinstance(result, np.ndarray):
+                result_str = str(result)
+            else:
+                result_str = str(result)
 
-    # Remove any assignment part from the query (if exists)
-    query = query.split('=')[-1].strip()  # Get the right part after '=' if exists
-
-    try:
-        # Execute the query without assignments
-        result = eval(query, {"df": data})  # Pass 'data' as a variable in the eval context
-        
-        # Format the result to make it easier to read based on its type
-        if isinstance(result, pd.DataFrame):
-            result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
-        elif isinstance(result, pd.Series):
-            result_str = f"\n{result.head(1).to_string()}\n...(showing first row of series)"
-        elif isinstance(result, np.ndarray):
-            result_str = str(result)
-        else:
-            result_str = str(result)
-
-    except Exception as e:
-        return f"Error executing query: {str(e)}"
-
-    # Replace the original [QQ]...[/QQ] part with the actual result string
-    ai_response = ai_response.replace(f"[QQ]{query}[/QQ]", result_str)
+            ai_response = ai_response.replace(f"[QQ]{query}[/QQ]", result_str)
+        except Exception as e:
+            return f"Error executing query: {str(e)}"
 
     return ai_response
 
-def general_query():
-    """Handles the user input for general queries on the HDB resale market."""
-    st.title("General Query on HDB Resale Market")
-    
-    # Load and preprocess the data
-    df = load_and_preprocess_data()
-    st.write("Data loaded successfully with the following columns:")
-    st.write(df.head())
-
-    # Extract data summary
-    data_summary = extract_data_summary(df)
-    user_query = st.text_input("Enter your query about HDB resale trends or prices:")
-    user_query = user_query.lower()
-    st.write("E.g., How many unique towns are there?")
-    st.write("E.g., Which town has most transaction?")
-    st.write("E.g., How is the average resale price in 2020?")
-    st.write("E.g., What is the average resale price for 3-room flats in Bedok in 2020?")
-    st.write("E.g., What is the price trend from 2020 to 2023?")
-
-    submit_button = st.button("Submit")
-
-    response = None  # Initialize response to avoid UnboundLocalError
-
-    # Execute only when the submit button is pressed
-    if submit_button and user_query:
-        # Attempt to process the query
-        for i in range(5):
-            response = process_query(df, user_query, data_summary)
-            if "Error executing query" not in response:
-                break
-
-    # Display results if response is defined and contains no error
-    if response:
-        if "Error executing query" in response:
-            st.error("There was an issue processing your query. Please try again with a different question.")
-        else:
-            st.write("Response:")
-            st.write(response)
-
-
 
 def process_query(df, user_query, data_summary):
-    """Handles querying through the OpenAI model and processes the response."""
     try: 
-        llm_prompt = f"""(
+        llm_prompt = f"""
             You are an assistant for analyzing HDB resale housing data in Singapore. 
             You have access to a pandas DataFrame called 'df' that contains information about HDB resale transactions over the years. 
             The columns in the DataFrame are: {', '.join(df.columns)}
-            You can query the DataFrame df using Python pandas syntax to filter, aggregate, or analyze data as needed to answer the user's queries. 
             Here is a summary of the data: {data_summary}. 
             
             Use the following format in your response: [QQ]df.your_pandas_query[/QQ]. 
             For example, to calculate average resale price, use: [QQ]df['resale_price'].mean()[/QQ]. 
             The 'month' column is a datetime object. Handle it properly. E.g. To filter 2020, use [QQ]df[df['month'].dt.year == 2020][/QQ]
 
-            DO NOT assign variable names to your query. e.g. don't assign df2020 = query.
-            Use DataFrame queries when needed to provide accurate and specific answers.
-            Use separate [QQ] blocks if multiple steps are required, explain after every block.
-            Make sure the code within your [QQ][/QQ] block can run without error.
-            
+            DO NOT assign variable names to your query.
             Answer the following query from the user: {user_query}.
-        )"""
+        """
 
         response = openai.ChatCompletion.create(
             model="gpt-4",
@@ -211,11 +89,28 @@ def process_query(df, user_query, data_summary):
         )
 
         llm_response = response.choices[0].message.content
-        st.write(llm_response)
-
-        # Execute DataFrame queries in the response (in blocks)
         final_response = process_ai_response_with_dataframe_queries(llm_response, df)
-        st.write(final_response)
+        return final_response
 
     except Exception as e:
-        st.error(f"Error processing the query: {e}")
+        return f"Error processing the query: {e}"
+
+
+def general_query():
+    st.title("General Query on HDB Resale Market")
+
+    df = load_and_preprocess_data()
+    st.write("Data loaded successfully with the following columns:")
+    st.write(df.head())
+
+    data_summary = extract_data_summary(df)
+    user_query = st.text_input("Enter your query about HDB resale trends or prices:")
+    submit_button = st.button("Submit")
+
+    if submit_button and user_query:
+        response = process_query(df, user_query, data_summary)
+        if "Error executing query" in response:
+            st.error("There was an issue processing your query. Please try again with a different question.")
+        else:
+            st.write("Response:")
+            st.write(response)
