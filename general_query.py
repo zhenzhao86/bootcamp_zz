@@ -211,7 +211,7 @@ def general_query():
                 query = llm_response[start:end]
                 print(query)
 
-                result = query_dataframe(data, query)
+                result = query_dataframe(df, query)
                 
                 # Format the result based on its type
                 if isinstance(result, pd.DataFrame):
