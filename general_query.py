@@ -112,35 +112,33 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
         end = ai_response.index("[/QUERY]")
         
         # Extract the query text from between [QUERY] and [/QUERY] tags
-        query = ai_response[start:end]
-        st.write(ai_response)
-        st.write(query)
-        st.write(data)
+        query = ai_response[start:end].strip()  # Stripping extra whitespace
+        st.write("Processing query:", query)  # Optional: Debug output
 
-        # Execute the query on the provided DataFrame 'data' and get the result
-        result = query_dataframe(data, query)  # Assume 'query_dataframe' is a helper function to run queries
+        try:
+            # Execute the query on the provided DataFrame 'data' and get the result
+            result = eval(query, {"df": data})
+
+            # Format the result to make it easier to read based on its type
+            if isinstance(result, pd.DataFrame):
+                result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
+            elif isinstance(result, pd.Series):
+                result_str = f"\n{result.head(1).to_string()}\n...(showing first row of series)"
+            elif isinstance(result, np.ndarray):
+                result_str = str(result)
+            else:
+                result_str = str(result)
+
+            # Replace the original [QUERY]...[/QUERY] part with the actual result string
+            ai_response = ai_response.replace(f"[QUERY]{query}[/QUERY]", result_str)
         
-        # Format the result to make it easier to read based on its type
-        if isinstance(result, pd.DataFrame):
-            # If the result is a DataFrame, show just the first row to keep it brief
-            result_str = f"\n{result.head(1).to_string()}\n...(showing first row of dataframe)"
-        elif isinstance(result, pd.Series):
-            # If it's a Series (a single column), also show the first row
-            result_str = f"\n{result.head(1).to_string()}\n...(showing first row of series)"
-        elif isinstance(result, np.ndarray):
-            # If the result is an array (e.g., from calculations), convert it to a string
-            result_str = str(result)
-        else:
-            # For any other type (like a single value), just convert it to a string
-            result_str = str(result)
-        
-        # Replace the original [QUERY]...[/QUERY] part with the actual result string
-        ai_response = ai_response.replace(f"[QUERY]{query}[/QUERY]", result_str)
+        except Exception as e:
+            # Return an error message if there's an issue executing the query
+            return f"Error executing query: {str(e)}"
     
     # Return the modified response with all queries replaced by their results
     return ai_response
-
-
+    
 def general_query():
     st.title("General Query on HDB Resale Market")
     
