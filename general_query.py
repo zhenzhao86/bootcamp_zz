@@ -114,20 +114,17 @@ def general_query():
                 year = None
                 town = None
                 
-                # Use regex to extract the flat type and year
-                flat_type_match = re.search(r'(\d+-room)', user_query)
+                # Use regex to extract the flat type, year, and town
+                flat_type_match = re.search(r'(\d+\s?[-]?room)', user_query)
                 year_match = re.search(r'(\d{4})', user_query)
+                town_match = re.search(r'(?i)\b(ang mo kio|bedok|bishan|bukit batok|bukit merah|bukit panjang|bukit timah|central area|choa chu kang|clementi|geylang|hougang|jurong east|jurong west|kallang/whampoa|marine parade|pasir ris|punggol|queenstown|sembawang|sengkang|serangoon|tampines|toa payoh|woodlands|yishun)\b', user_query)
 
                 if flat_type_match:
-                    flat_type = flat_type_match.group(0)  # Get the matched flat type
+                    flat_type = flat_type_match.group(0).strip()  # Get the matched flat type
                 if year_match:
                     year = int(year_match.group(1))  # Convert matched year to int
-
-                # Extract town if present and ensure it does not overlap with year
-                if "in" in user_query:
-                    town_part = user_query.split("in")[-1].strip()
-                    if year is None or str(year) not in town_part:  # Only extract if year is not part of town
-                        town = town_part
+                if town_match:
+                    town = town_match.group(0).strip()  # Get the matched town
 
                 # Debugging output
                 st.write(f"Extracted flat type: {flat_type}, year: {year}, town: {town}")
