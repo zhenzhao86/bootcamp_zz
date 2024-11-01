@@ -15,11 +15,11 @@ def password_protect():
         st.session_state.authenticated = False
     
     if not st.session_state.authenticated:
-        password = st.text_input("Enter password", type="password")
+        password = st.text_input("Enter password and click the login button", type="password")
         if st.button("Login"):
             if authenticate(password):
                 st.session_state.authenticated = True
-                st.success("Login successful")
+                st.success("Login successful. Please click the login button again to proceed.")
             else:
                 st.error("Incorrect password")
         return False
