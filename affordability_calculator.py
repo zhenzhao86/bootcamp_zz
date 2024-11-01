@@ -20,13 +20,15 @@ def load_and_preprocess_data():
 
 def affordability_calculator():
     st.title("HDB Resale Housing Affordability Calculator")
+    st.image("image/hdb_afford.jpg", caption="Housing Calculator")
+    st.write("This feature will consider recent flats (in 2023-2024) of your selected type in the selected town.")
     df = load_and_preprocess_data()
     
     # Collect user inputs
     income = st.number_input("Enter your monthly household income (SGD)", min_value=0)
     savings = st.number_input("Enter your total savings (CPF + cash) (SGD)", min_value=0)
     debts = st.number_input("Enter your monthly debts (e.g., loans) (SGD)", min_value=0)
-    loan_tenure = st.number_input("Enter the loan tenure in years", min_value=1, max_value=30)
+    loan_tenure = st.number_input("Enter the loan tenure you expect to take (in years)", min_value=1, max_value=30)
     target_town = st.selectbox("Select the town for the target flat", df['town'].unique())
     flat_type = st.selectbox("Select flat type", df['flat_type'].unique())
     
@@ -48,9 +50,9 @@ def affordability_calculator():
 
             # Determine affordability and display result
             if affordable_price >= avg_resale_price:
-                st.success("Congratulations! You can afford this flat based on your inputs.")
+                st.success("Congratulations! You can afford this flat based on your inputs. Wait while we give you more personalized advice...")
             else:
-                st.warning("The target flat may not be affordable based on your inputs.")
+                st.warning("The target flat may not be affordable based on your inputs. Wait while we give you more personalized advice...")
 
             # Generate personalized advice using LLM
             user_query = (
