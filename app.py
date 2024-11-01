@@ -7,8 +7,8 @@ from utils import password_protect
 
 
 # Password protect the app
-# if not password_protect():
-#     st.stop()
+if not password_protect():
+    st.stop()
 
 # Sidebar Navigation
 st.sidebar.title("Navigation")
