@@ -1,11 +1,14 @@
 import streamlit as st
 import bcrypt
 
-# Hardcoded password (for example purposes, you may implement more secure ways)
+# Precomputed hashed password stored in secrets
+
+# Fetch the hashed password from Streamlit secrets and encode it to bytes
+hashed_password = st.secrets["STREAMLIT_PASSWORD"].encode('utf-8')  # Ensure it is in bytes
+
 def authenticate(password):
-    # Hashing the password once here is not ideal. Ideally, use a stored hashed password.
-    hashed_password = st.secrets["STREAMLIT_PASSWORD"]
-    return bcrypt.checkpw(password.encode(), hashed_password)
+    # Check if the provided password matches the hashed password
+    return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
 
 def password_protect():
     if 'authenticated' not in st.session_state:
