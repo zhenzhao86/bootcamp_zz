@@ -18,8 +18,7 @@ def password_protect():
             if login_button:
                 if authenticate(password):
                     st.session_state.authenticated = True
-                    st.success("Login successful")
-                    st.experimental_rerun()  
+                    st.success("Login successful") 
                 else:
                     st.error("Incorrect password")
         
