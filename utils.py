@@ -2,7 +2,8 @@ import bcrypt
 import streamlit as st
 
 # Precomputed hash of the password (hashed once and then stored here)
-PRECOMPUTED_HASH = bcrypt.hashpw(b"aibootcampzz", bcrypt.gensalt())  # Hash this password once and save the result
+STREAMLIT_PASSWORD = st.secrets["STREAMLIT_PASSWORD"]
+PRECOMPUTED_HASH = bcrypt.hashpw(STREAMLIT_PASSWORD, bcrypt.gensalt())  # Hash this password once and save the result
 
 def authenticate(password):
     return bcrypt.checkpw(password.encode(), PRECOMPUTED_HASH)
