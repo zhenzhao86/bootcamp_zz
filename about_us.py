@@ -4,18 +4,18 @@ def about_us():
     st.title("About Us")
     st.write("""
     ## Project Scope
-    This web application serves as an educational tool to help users navigate the HDB resale market, offering two main features: a housing affordability calculator and general information about HDB. 
+    This is my first Streamlit and LLM project. This web application serves as an educational tool to help users navigate the HDB resale market, offering two main features: a general query assistant and a housing affordability calculator. 
     
     ## Objectives
-    - To provide citizens with an easy way to calculate their housing affordability.
-    - To allow users to ask general questions about HDB and receive AI-powered responses.
-    
+    - To allow users to ask general questions about HDB resale prices (based on resale flat prices) and received LLM powered responses.
+    - To provide users with an easy way to calculate their housing affordability, based on their current income/savings and desired house. The LLM would also provide personalized advice based on the input.
+
     ## Data Sources
-    - Resale Flat Prices (https://data.gov.sg/collections/189/view)         
-    - [HDB Official Website](https://www.hdb.gov.sg/)
-    - [Singapore Government APIs](https://www.developer.gov.sg/)
+    The Resale Flat Prices are taken from data gov site : https://data.gov.sg/collections/189/view        
     
     ## Features
-    - LLM-powered general query assistant
-    - Housing affordability calculator based on income and savings
+    - LLM-powered general query assistant (general query)
+    - Housing affordability calculator based on income and savings (affordability calculator)
     """)
+
+    st.image("image/merlion.jpg", caption="Merlion")

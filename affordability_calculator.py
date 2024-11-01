@@ -32,8 +32,8 @@ def affordability_calculator():
     target_town = st.selectbox("Select the town for the target flat", df['town'].unique())
     flat_type = st.selectbox("Select flat type", df['flat_type'].unique())
     
-    # Loan and affordability calculations
-    interest_rate = 0.025
+    # Loan and affordability calculations using HDB loan
+    interest_rate = 0.026
     max_loan = (income - debts) * 12 * loan_tenure * (1 - interest_rate)
     affordable_price = max_loan + savings
 
@@ -50,9 +50,9 @@ def affordability_calculator():
 
             # Determine affordability and display result
             if affordable_price >= avg_resale_price:
-                st.success("Congratulations! You can afford this flat based on your inputs. Wait while we give you more personalized advice...")
+                st.success("Congratulations! You can afford this flat based on your inputs, assuming an HDB loan of 2.6%. Wait while we give you more personalized advice...")
             else:
-                st.warning("The target flat may not be affordable based on your inputs. Wait while we give you more personalized advice...")
+                st.warning("The target flat may not be affordable based on your inputs, assuming an HDB loan of 2.6%. Wait while we give you more personalized advice...")
 
             # Generate personalized advice using LLM
             user_query = (
