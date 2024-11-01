@@ -244,7 +244,3 @@ def query_dataframe(data, query):
             return result
     except Exception as e:
         return f"Error executing query: {str(e)}"
-
-# Run the general query function in Streamlit app
-if __name__ == "__main__":
-    general_query()
