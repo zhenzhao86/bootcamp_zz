@@ -14,7 +14,7 @@ if not password_protect():
 st.sidebar.title("Navigation")
 option = st.sidebar.radio(
     "Choose a page", 
-    ["Main", "Affordability Calculator", "General Query on HDB", "About Us", "Methodology"]
+    ["Main", "General Query on HDB", "Affordability Calculator", "About Us", "Methodology"]
 )
 
 #Main program based on navigation
