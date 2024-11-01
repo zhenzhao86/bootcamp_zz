@@ -25,12 +25,13 @@ def affordability_calculator():
     df = load_and_preprocess_data()
     
     # Collect user inputs
+    st.write("Provide information about your finances:")
     income = st.number_input("Enter your monthly household income (SGD)", min_value=0)
     savings = st.number_input("Enter your total savings (CPF + cash) (SGD)", min_value=0)
     debts = st.number_input("Enter your monthly debts (e.g., loans) (SGD)", min_value=0)
     loan_tenure = st.number_input("Enter the loan tenure you expect to take (in years)", min_value=1, max_value=30)
 
-    st.write("Enter your dream home:")
+    st.write("Choose your desired home:")
     target_town = st.selectbox("Select your desired Town", df['town'].unique())
     flat_type = st.selectbox("Select your targeted flat type", df['flat_type'].unique())
     
