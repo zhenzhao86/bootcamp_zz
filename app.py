@@ -31,8 +31,6 @@ def main():
         Always consult with qualified professionals for accurate and personalized advice.
         """)
 
-    st.write("My First LLM Project")
-
     # Main Page Content
     if option == "Main":
         st.title("HDB Resale Market Information Platform")
