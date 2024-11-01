@@ -34,10 +34,6 @@ def main():
     # Main Page Content
     if option == "Main":
         st.title("HDB Resale Market Information Platform")
-        st.write("Affordability Calculator - Input your current finances and desired home, and our LLM will provide personalized advice to afford your dream home.")
-        st.write("General Query on HDB - Ask questions about HDB resale data.")
-        st.write("About Us - About the creator of this project.")
-        st.write("Methodology - The logic behind our AI-powered advisors.")
         
     # Housing Affordability Calculator Page
     elif option == "Affordability Calculator":
