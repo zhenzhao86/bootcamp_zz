@@ -3,12 +3,9 @@ import streamlit as st
 
 # Retrieve the precomputed hash of the password from Streamlit secrets
 hashed_password = st.secrets["STREAMLIT_PASSWORD"]
-
-# Convert the stored hashed password to bytes (if necessary)
 PRECOMPUTED_HASH = hashed_password.encode('utf-8')
 
 def authenticate(password):
-    # Ensure the input password is encoded to bytes before checking
     return bcrypt.checkpw(password.encode('utf-8'), PRECOMPUTED_HASH)
 
 def password_protect():
@@ -16,7 +13,8 @@ def password_protect():
         st.session_state.authenticated = False
     
     if not st.session_state.authenticated:
-        with st.form("login_form"):
+        # Use a unique key for the form
+        with st.form("login_form_" + str(st.session_state.get('form_id', 0))):
             password = st.text_input("Enter password", type="password")
             login_button = st.form_submit_button("Login")
         
@@ -27,6 +25,11 @@ def password_protect():
                 else:
                     st.error("Incorrect password")
         
+        # Increment the form ID to ensure uniqueness in subsequent calls
+        if 'form_id' not in st.session_state:
+            st.session_state['form_id'] = 0
+        st.session_state['form_id'] += 1
+
         return False
     return True
 
