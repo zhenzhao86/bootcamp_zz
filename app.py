@@ -33,7 +33,7 @@ def main():
 
     # Main Page Content
     if option == "Main":
-        st.title("HDB Resale Market Information Platform")
+        st.title("HDB Resale Information Platform")
         
     # Housing Affordability Calculator Page
     elif option == "Affordability Calculator":
