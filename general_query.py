@@ -113,7 +113,7 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
         
         # Extract the query text from between [QUERY] and [/QUERY] tags
         query = ai_response[start:end].strip()  # Stripping extra whitespace
-        st.write("Processing query:", query)  # Optional: Debug output
+        # st.write("Processing query:", query)  # Optional: Debug output
 
         try:
             # Execute the query on the provided DataFrame 'data' and get the result
@@ -138,7 +138,7 @@ def process_ai_response_with_dataframe_queries(ai_response, data):
     
     # Return the modified response with all queries replaced by their results
     return ai_response
-    
+
 def general_query():
     st.title("General Query on HDB Resale Market")
     

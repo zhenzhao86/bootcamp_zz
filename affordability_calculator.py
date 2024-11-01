@@ -45,14 +45,14 @@ def affordability_calculator():
         if pd.isna(avg_resale_price):
             st.write("No data available for the selected flat type and town.")
         else:
-            st.write(f"Average resale price for a {flat_type} flat in {target_town} (2023-2024): ${avg_resale_price:,.2f}")
+            st.write(f"Average resale price for a {flat_type} flat in {target_town} (from 2023-2024): ${avg_resale_price:,.2f}")
             st.write(f"Based on your inputs, you can afford a flat worth approximately ${affordable_price:,.2f}.")
 
             # Determine affordability and display result
             if affordable_price >= avg_resale_price:
-                st.success("Congratulations! You can afford this flat based on your inputs, assuming an HDB loan of 2.6%. Wait while we give you more personalized advice...")
+                st.success("Congratulations! You can afford this flat based on your inputs, assuming an HDB loan of 2.6%. Please wait (~30s) while we give you more personalized advice...")
             else:
-                st.warning("The target flat may not be affordable based on your inputs, assuming an HDB loan of 2.6%. Wait while we give you more personalized advice...")
+                st.warning("The target flat may not be affordable based on your inputs, assuming an HDB loan of 2.6%. Please wait (~30s) while we give you more personalized advice...")
 
             # Generate personalized advice using LLM
             user_query = (
