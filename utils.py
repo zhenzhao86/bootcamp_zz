@@ -1,10 +1,11 @@
-import streamlit as st
 import bcrypt
+import streamlit as st
 
-# Password
+# Precomputed hash of the password (hashed once and then stored here)
+PRECOMPUTED_HASH = bcrypt.hashpw(b"aibootcampzz", bcrypt.gensalt())  # Hash this password once and save the result
+
 def authenticate(password):
-    hashed_password = bcrypt.hashpw(b"aibootcampzz", bcrypt.gensalt())  # Replace with a hashed password
-    return bcrypt.checkpw(password.encode(), hashed_password)
+    return bcrypt.checkpw(password.encode(), PRECOMPUTED_HASH)
 
 def password_protect():
     if 'authenticated' not in st.session_state:
