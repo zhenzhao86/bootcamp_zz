@@ -20,7 +20,7 @@ def load_and_preprocess_data():
 
 def affordability_calculator():
     st.title("HDB Resale Housing Affordability Calculator")
-    st.image("image/hdb_afford.jpg", caption="Housing Calculator")
+    st.image("image/hdb_afford.jpg", height=200, width=200, caption="Housing Calculator")
     st.write("This feature will consider recent flats (in 2023-2024) of your selected type in the selected town.")
     df = load_and_preprocess_data()
     

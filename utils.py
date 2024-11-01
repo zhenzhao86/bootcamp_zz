@@ -12,12 +12,16 @@ def password_protect():
         st.session_state.authenticated = False
     
     if not st.session_state.authenticated:
-        password = st.text_input("Enter password", type="password")
-        if st.button("Login"):
-            if authenticate(password):
-                st.session_state.authenticated = True
-                st.success("Login successful!")
-            else:
-                st.error("Incorrect password")
+        with st.form("login_form"):
+            password = st.text_input("Enter password", type="password")
+            login_button = st.form_submit_button("Login")
+        
+            if login_button:
+                if authenticate(password):
+                    st.session_state.authenticated = True
+                    st.success("Login successful. Please click button again to login if page does not refresh.") 
+                else:
+                    st.error("Incorrect password")
+        
         return False
     return True
