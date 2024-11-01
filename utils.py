@@ -15,8 +15,11 @@ def password_protect():
         st.session_state.authenticated = False
     
     if not st.session_state.authenticated:
+        # Create a unique key for the login form
+        form_key = f"login_form_{st.session_state.get('form_id', 0)}"
+        
         # Create a form for login
-        with st.form("login_form"):
+        with st.form(key=form_key):
             password = st.text_input("Enter password", type="password")
             login_button = st.form_submit_button("Login")  # This button will submit the form
 
@@ -24,13 +27,14 @@ def password_protect():
             if login_button:
                 if authenticate(password):
                     st.session_state.authenticated = True
-                    st.success("Login successful. Please click the button again to login")
+                    st.success("Login successful")
                 else:
                     st.error("Incorrect password")
 
+        # Increment form_id to ensure uniqueness for the next form
+        if 'form_id' not in st.session_state:
+            st.session_state['form_id'] = 0
+        st.session_state['form_id'] += 1
+
         return False
     return True
-
-# Call the password protection function at the beginning of your main app code
-if password_protect():
-    st.write("Your secure content goes here")
