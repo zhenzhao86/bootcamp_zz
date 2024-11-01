@@ -29,8 +29,10 @@ def affordability_calculator():
     savings = st.number_input("Enter your total savings (CPF + cash) (SGD)", min_value=0)
     debts = st.number_input("Enter your monthly debts (e.g., loans) (SGD)", min_value=0)
     loan_tenure = st.number_input("Enter the loan tenure you expect to take (in years)", min_value=1, max_value=30)
-    target_town = st.selectbox("Select the town for the target flat", df['town'].unique())
-    flat_type = st.selectbox("Select flat type", df['flat_type'].unique())
+
+    st.write("Enter your dream home:")
+    target_town = st.selectbox("Select your desired Town", df['town'].unique())
+    flat_type = st.selectbox("Select your targeted flat type", df['flat_type'].unique())
     
     # Loan and affordability calculations using HDB loan
     interest_rate = 0.026
